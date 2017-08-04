@@ -17,4 +17,9 @@ public class Pass implements Move {
     public Data getPass() {
         return pass;
     }
+
+    @Override
+    public String toString() {
+        return "pass " + pass.punter;
+    }
 }

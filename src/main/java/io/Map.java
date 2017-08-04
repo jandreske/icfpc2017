@@ -30,4 +30,19 @@ public class Map {
     public Set<Integer> getMines() {
         return mines;
     }
+
+    @Override
+    public String toString() {
+        return "Map [" + toString(sites) + "] [" + toString(rivers) + "] [" + toString(mines) + "]";
+    }
+
+    private static String toString(Iterable<?> xs) {
+        StringBuilder b = new StringBuilder();
+        xs.forEach(x -> {
+            b.append(x);
+            b.append(',');
+        });
+        b.setLength(b.length() - 1);
+        return b.toString();
+    }
 }

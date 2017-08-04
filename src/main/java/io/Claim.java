@@ -8,10 +8,14 @@ public class Claim implements Move {
         int source;
         int target;
 
+        @Override
+        public String toString() {
+            return "claim " + punter + " " + source + "-" + target;
+        }
+
     }
 
     private Data claim;
-
 
     @Override
     public Claim.Data getClaim() {
@@ -21,5 +25,10 @@ public class Claim implements Move {
     @Override
     public Pass.Data getPass() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return claim.toString();
     }
 }
