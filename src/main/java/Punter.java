@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import solvers.ExpandingMineClaimer;
-import solvers.RandomClaimer;
-import solvers.SimpleMineClaimer;
-import solvers.Solver;
+import solvers.*;
 import state.GameState;
 
 import java.io.*;

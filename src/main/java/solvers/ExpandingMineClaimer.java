@@ -51,6 +51,8 @@ public class ExpandingMineClaimer implements Solver {
 
         //if we dont want a river at a mine, lets expand
         //lets check all the free ones and pick one
+        River best = null;
+        int bestPoints = 0;
         for (River river : freeRivers) {
             boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
             boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0);
@@ -63,11 +65,15 @@ public class ExpandingMineClaimer implements Solver {
                 if (state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) continue;
             }
 
-            //only one side is connected, take it
-            return river;
+            //only one side is connected, we consider this one
+            int points = state.getPotentialPoints(river);
+            if (best == null || points > bestPoints) {
+                best = river;
+                bestPoints = points;
+            }
         }
 
-        //nothing cool found, take any free one
-        return freeRivers.iterator().next();
+        return best;
     }
+
 }
