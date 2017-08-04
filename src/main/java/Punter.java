@@ -65,7 +65,7 @@ public class Punter {
         LOG.info("Starting Handshake...");
         Handshake.Request request = new Handshake.Request("A Storm of Minds");
         writeJson(out, request);
-        Handshake.Response response = objectMapper.readValue(in, Handshake.Response.class);
+        Handshake.Response response = readJson(in, Handshake.Response.class);
         if (!response.getYou().equals(request.getMe())) {
             throw new ProtocolException("Handshake: Name did not match [request: '" + request.getMe() + "', response: '" + response.getYou() + "']");
         }
@@ -73,7 +73,7 @@ public class Punter {
 
         // 1. Setup
         LOG.info("Receiving setup...");
-        Setup.Request setup = objectMapper.readValue(in, Setup.Request.class);
+        Setup.Request setup = readJson(in, Setup.Request.class);
         Setup.Response setupResponse = new Setup.Response(setup.getPunter());
         writeJson(out, setupResponse);
         LOG.info("Punter id: " + setup.getPunter());
@@ -87,7 +87,7 @@ public class Punter {
         }
 
         LOG.info("Receiving scoring info...");
-        Scoring scoring = objectMapper.readValue(in, Scoring.class);
+        Scoring scoring = readJson(in, Scoring.class);
         // TODO
     }
 
@@ -97,5 +97,17 @@ public class Punter {
         out.print(':');
         out.print(s);
         out.flush();
+    }
+
+    private <T> T readJson(InputStream in, Class<T> clazz) throws IOException {
+        int length = 0;
+        for (;;) {
+            int c = in.read();
+            if (c == ':') {
+                break;
+            }
+            length = 10 * length + Character.getNumericValue(c);
+        }
+        return objectMapper.readValue(in, clazz);
     }
 }
