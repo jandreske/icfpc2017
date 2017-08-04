@@ -2,6 +2,7 @@ package state;
 
 import io.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,10 +15,13 @@ public class GameState {
 
     private final Map map;
 
+    private final GraphMap graphMap;
+
     public GameState(Setup.Request setup) {
         myPunterId = setup.getPunter();
         numPunters = setup.getPunters();
         map = setup.getMap();
+        graphMap = new GraphMap(map.getSites(), map.getRivers());
     }
 
     public int getMyPunterId() {
@@ -51,8 +55,12 @@ public class GameState {
     }
 
     public Set<River> getOwnRivers() {
+        return getRiversByOwner(myPunterId);
+    }
+
+    public Set<River> getRiversByOwner(int punter) {
         return map.getRivers().stream()
-                .filter(r -> r.getOwner() == myPunterId)
+                .filter(r -> r.getOwner() == punter)
                 .collect(Collectors.toSet());
     }
 
@@ -81,19 +89,27 @@ public class GameState {
     }
 
     public int getScore(int punter) {
+        GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
         return map.getMines().stream()
-                .mapToInt(mine -> getScore(punter, mine))
+                .mapToInt(mine -> getScore(punterMap, mine))
                 .sum();
     }
 
-    private int getScore(int punter, int mine) {
+    private int getScore(GraphMap punterMap, int mine) {
         return map.getSites().stream()
-                .mapToInt(site -> getScore(punter, mine, site))
+                .mapToInt(site -> getScore(punterMap, mine, site))
                 .sum();
     }
 
-    private int getScore(int punter, int mine, Site site) {
-        throw new LogicException("score not yet implemented");
+    private int getScore(GraphMap punterMap, int mine, Site site) {
+        if (site.getId() == mine || !punterMap.hasRoute(mine, site.getId())) {
+            return 0;
+        }
+        return graphMap.getShortestRouteLength(mine, site.getId());
+    }
+
+    public List<River> getShortestRoute(int site1, int site2) {
+        return graphMap.getShortestRoute(site1, site2);
     }
 
 }

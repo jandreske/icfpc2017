@@ -1,0 +1,44 @@
+package state;
+
+import io.Map;
+import io.River;
+import io.Site;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
+import org.jgrapht.alg.shortestpath.AStarShortestPath;
+import org.jgrapht.graph.SimpleGraph;
+
+import java.util.List;
+
+class GraphMap {
+
+    private final SimpleGraph<Integer, River> g;
+
+    private final ShortestPathAlgorithm<Integer, River> spa;
+
+    GraphMap(Iterable<Site> sites, Iterable<River> rivers) {
+        g = new SimpleGraph<>(River.class);
+        sites.forEach(site -> g.addVertex(site.getId()));
+        rivers.forEach(river -> g.addEdge(river.getSource(), river.getTarget(), river));
+
+        spa = new AStarShortestPath<>(g, (v,t) -> (v == t) ? 0 : 1);
+    }
+
+    /**
+     * Return the length of the shortest route or -1 if no route exists.
+     */
+    int getShortestRouteLength(int a, int b) {
+        GraphPath<Integer, River> path = spa.getPath(a, b);
+        return (path == null) ? -1 : path.getLength();
+    }
+
+    List<River> getShortestRoute(int a, int b) {
+        GraphPath<Integer, River> path = spa.getPath(a, b);
+        return path.getEdgeList();
+    }
+
+    boolean hasRoute(int a, int b) {
+        return spa.getPathWeight(a, b) < Double.POSITIVE_INFINITY;
+    }
+
+}
