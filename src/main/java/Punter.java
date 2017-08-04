@@ -40,7 +40,7 @@ public class Punter {
     }
 
     private static void startOnlineGame(String server, int port) {
-        Scoring scoring = null;
+        Scoring.Data scoring = null;
         try (Socket client = new Socket(server, port)) {
             DataInputStream input = new DataInputStream(client.getInputStream());
             DataOutputStream output = new DataOutputStream(client.getOutputStream());
@@ -53,7 +53,7 @@ public class Punter {
             LOG.error("Unexpected Exception: ", e);
         }
 
-        LOG.info("SCORE on {}: {}", port, scoring == null ? "FAILED" : "TODO");
+        LOG.info("SCORE on {}: {}", port, scoring == null ? "FAILED" : scoring);
     }
 
 
@@ -67,7 +67,7 @@ public class Punter {
         solver = new SimpleMineClaimer();
     }
 
-    private Scoring runGame(InputStream in, PrintStream out) throws IOException {
+    private Scoring.Data runGame(InputStream in, PrintStream out) throws IOException {
 
         // 0. Handshake
         LOG.info("Starting Handshake...");
@@ -105,7 +105,15 @@ public class Punter {
         }
 
         LOG.info("Receiving scoring info...");
-        return readJson(in, Scoring.class);
+        Scoring.Data scoring = readJson(in, Scoring.class).stop;
+        scoring.moves.forEach(state::applyMove);
+        scoring.scores.forEach(score -> {
+            int computed = state.getScore(score.punter);
+            if (score.score != computed) {
+                LOG.warn("score mismatch. Server: {}, computed: {}", score.score, computed);
+            }
+        });
+        return scoring;
     }
 
     private void writeJson(PrintStream out, Object value) throws JsonProcessingException {
