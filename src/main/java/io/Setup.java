@@ -21,6 +21,18 @@ public class Setup {
         public Map getMap() {
             return map;
         }
+
+        public void setPunters(int punters) {
+            this.punters = punters;
+        }
+
+        public void setPunter(int punter) {
+            this.punter = punter;
+        }
+
+        public void setMap(Map map) {
+            this.map = map;
+        }
     }
 
     public static class Response {

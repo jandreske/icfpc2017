@@ -67,7 +67,7 @@ public class GameState {
     public Optional<River> getRiver(int source, int target) {
         return map.getRivers().stream()
                 .filter(r -> (r.getSource() == source && r.getTarget() == target)
-                        ||(r.getSource() == target && r.getTarget() == source))
+                          || (r.getSource() == target && r.getTarget() == source))
                 .findAny();
     }
 
@@ -106,7 +106,8 @@ public class GameState {
         if (site.getId() == mine || !punterMap.hasRoute(mine, site.getId())) {
             return 0;
         }
-        return graphMap.getShortestRouteLength(mine, site.getId());
+        int shortest = graphMap.getShortestRouteLength(mine, site.getId());
+        return shortest * shortest;
     }
 
     public List<River> getShortestRoute(int site1, int site2) {
