@@ -1,6 +1,7 @@
 package io;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import state.GameState;
 
 import java.beans.Transient;
 
@@ -50,6 +51,7 @@ public class Move {
 
     private ClaimData claim = null;
     private PassData pass = null;
+    private GameState state = null;
 
     /** Returns null if this move is a pass. */
     public ClaimData getClaim() {
@@ -61,6 +63,14 @@ public class Move {
         return pass;
     }
 
+    /** Offline mode only. */
+    public GameState getState() {
+        return state;
+    }
+
+    public void setState(GameState state) {
+        this.state = state;
+    }
 
     public boolean isClaim() {
         return claim != null;

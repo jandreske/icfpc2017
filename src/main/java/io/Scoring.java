@@ -29,4 +29,8 @@ public class Scoring {
 
     public Data stop;
 
+    @Override
+    public String toString() {
+        return stop.toString();
+    }
 }

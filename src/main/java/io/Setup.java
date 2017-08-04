@@ -1,5 +1,8 @@
 package io;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import state.GameState;
+
 public class Setup {
 
     public static class Request {
@@ -35,9 +38,12 @@ public class Setup {
         }
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Response {
 
         private int ready;
+
+        private GameState state = null;
 
         public Response(int myId) {
             ready = myId;
@@ -45,6 +51,14 @@ public class Setup {
 
         public int getReady() {
             return ready;
+        }
+
+        public GameState getState() {
+            return state;
+        }
+
+        public void setState(GameState state) {
+            this.state = state;
         }
     }
 
