@@ -73,7 +73,8 @@ public class ExpandingMineClaimer implements Solver {
             }
         }
 
-        return best;
+        if (best != null) return best;
+        return freeRivers.iterator().next();
     }
 
 }
