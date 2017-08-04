@@ -5,6 +5,7 @@ import io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import solvers.RandomClaimer;
+import solvers.SimpleMineClaimer;
 import solvers.Solver;
 import state.GameState;
 
@@ -39,18 +40,20 @@ public class Punter {
     }
 
     private static void startOnlineGame(String server, int port) {
+        Scoring scoring = null;
         try (Socket client = new Socket(server, port)) {
             DataInputStream input = new DataInputStream(client.getInputStream());
             DataOutputStream output = new DataOutputStream(client.getOutputStream());
 
-            new Punter().runGame(input, new PrintStream(output));
-
+            scoring = new Punter().runGame(input, new PrintStream(output));
             output.close();
             input.close();
+
         } catch (IOException e) {
             LOG.error("Unexpected Exception: ", e);
-            throw new RuntimeException(e);
         }
+
+        LOG.info("SCORE on {}: {}", port, scoring == null ? "FAILED" : "TODO");
     }
 
 
@@ -61,10 +64,10 @@ public class Punter {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        solver = new RandomClaimer();
+        solver = new SimpleMineClaimer();
     }
 
-    void runGame(InputStream in, PrintStream out) throws IOException {
+    private Scoring runGame(InputStream in, PrintStream out) throws IOException {
 
         // 0. Handshake
         LOG.info("Starting Handshake...");
@@ -98,12 +101,11 @@ public class Punter {
             Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                                         : Move.claim(state.getMyPunterId(), claim);
             writeJson(out, move);
-            LOG.info("sent move: {}", move);
+            LOG.info("sent move: {}", objectMapper.writeValueAsString(move));
         }
 
         LOG.info("Receiving scoring info...");
-        Scoring scoring = readJson(in, Scoring.class);
-        // TODO
+        return readJson(in, Scoring.class);
     }
 
     private void writeJson(PrintStream out, Object value) throws JsonProcessingException {

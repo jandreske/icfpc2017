@@ -15,5 +15,4 @@ public class Scoring {
         int punter;
         int score;
     }
-
 }

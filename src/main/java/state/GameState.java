@@ -66,7 +66,8 @@ public class GameState {
 
     public Optional<River> getRiver(int source, int target) {
         return map.getRivers().stream()
-                .filter(r -> r.getSource() == source && r.getTarget() == target)
+                .filter(r -> (r.getSource() == source && r.getTarget() == target)
+                        ||(r.getSource() == target && r.getTarget() == source))
                 .findAny();
     }
 

@@ -1,7 +1,6 @@
 package solvers;
 
 import io.Gameplay;
-import io.Map;
 import io.Move;
 import io.River;
 import state.GameState;

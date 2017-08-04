@@ -61,9 +61,13 @@ public class Move {
         return pass;
     }
 
-    @Transient
+
     public boolean isClaim() {
         return claim != null;
     }
 
+    @Override
+    public String toString() {
+        return (isClaim() ? claim.toString() : pass.toString());
+    }
 }
