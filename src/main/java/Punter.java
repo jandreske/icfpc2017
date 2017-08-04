@@ -1,12 +1,12 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.Handshake;
-import io.ProtocolException;
-import io.Scoring;
-import io.Setup;
+import io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import solvers.RandomClaimer;
+import solvers.Solver;
+import state.GameState;
 
 import java.io.*;
 
@@ -55,9 +55,13 @@ public class Punter {
 
 
     private final ObjectMapper objectMapper;
+    private final Solver solver;
 
     private Punter() {
-        objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        solver = new RandomClaimer();
     }
 
     void runGame(InputStream in, PrintStream out) throws IOException {
@@ -87,7 +91,12 @@ public class Punter {
         int punterId = setup.getPunter();
         int ownMoves = (numRivers / numPunters) + ((numRivers % numPunters) > punterId ? 1 : 0);
         for (int moveNum = 0; moveNum < ownMoves; moveNum++) {
-            // TODO: a move
+            Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
+            GameState state = new GameState();
+            state.punter = punterId;
+            state.map = setup.getMap();
+            Move move = solver.getNextMove(state, moveRequest);
+            writeJson(out, move);
         }
 
         LOG.info("Receiving scoring info...");

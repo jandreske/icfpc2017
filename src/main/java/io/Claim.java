@@ -4,9 +4,9 @@ public class Claim implements Move {
 
     public static class Data {
 
-        int punter;
-        int source;
-        int target;
+        public int punter;
+        public int source;
+        public int target;
 
         @Override
         public String toString() {
