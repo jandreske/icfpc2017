@@ -27,15 +27,25 @@ public class ExpandingMineClaimer implements Solver {
             River best = null;
             int expansionOptions = 0;
             for (River river : mineRivers) {
-
+                int otherSite = river.getOpposite(mine);
+                int opts = state.getUnclaimedRiversTouching(otherSite).size();
+                if (best == null || opts > expansionOptions) {
+                    best = river;
+                    expansionOptions = opts;
+                }
             }
+            return best;
         }
 
-        for (River freeRiver : freeRivers) {
-            return freeRiver;
+        //if we dont want a river at a mine, lets expand
+        //lets check all the free ones and pick one
+        for (River river : freeRivers) {
+            //TODO: if we have something touching both sides, check whether they are already connected
+            if (state.getOwnRiversTouching(river.getSource()).size() > 0) return river;
+            if (state.getOwnRiversTouching(river.getTarget()).size() > 0) return river;
         }
 
-        LOG.error("No free rivers available");
-        return null;
+        //nothing cool found, take any free one
+        return freeRivers.iterator().next();
     }
 }

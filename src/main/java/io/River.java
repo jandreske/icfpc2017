@@ -1,5 +1,7 @@
 package io;
 
+import state.LogicException;
+
 import java.beans.Transient;
 
 public class River {
@@ -61,5 +63,11 @@ public class River {
         int result = source;
         result = 31 * result + target;
         return result;
+    }
+
+    public int getOpposite(Integer site) {
+        if (site == source) return target;
+        if (site == target) return source;
+        throw new LogicException("Cannot get opposite from site not touching river");
     }
 }

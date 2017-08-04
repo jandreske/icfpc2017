@@ -50,7 +50,7 @@ public class GameState {
 
     public Set<River> getUnclaimedRiversTouching(int siteId) {
         return map.getRivers().stream()
-                .filter(r -> r.touches(siteId) || !r.isClaimed())
+                .filter(r -> r.touches(siteId) && !r.isClaimed())
                 .collect(Collectors.toSet());
     }
 

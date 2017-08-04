@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import solvers.ExpandingMineClaimer;
+import solvers.RandomClaimer;
 import solvers.SimpleMineClaimer;
 import solvers.Solver;
 import state.GameState;
@@ -48,6 +50,7 @@ public class Punter {
     private static void startOnlineGame(String server, int port) {
         Scoring.Data scoring = null;
         try (Socket client = new Socket(server, port)) {
+            client.setSoTimeout(60000);
             InputStream input = client.getInputStream();
             OutputStream output = client.getOutputStream();
             Punter punter = new Punter();
@@ -70,7 +73,7 @@ public class Punter {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        solver = new SimpleMineClaimer();
+        solver = new ExpandingMineClaimer();
     }
 
     private Scoring.Data runOnlineGame(InputStream in, PrintStream out) throws IOException {
@@ -115,6 +118,9 @@ public class Punter {
         Scoring.Data scoring = readJson(in, Scoring.class).stop;
         scoring.moves.forEach(state::applyMove);
         LOG.info("number of own rivers: {}", state.getOwnRivers().size());
+        int myScore = scoring.scores.stream().filter(score -> score.punter == punterId).findFirst().get().score;
+        int rank = numPunters - (int) scoring.scores.stream().filter(score -> score.score < myScore).count();
+        LOG.info("RANKING {} / {}", rank, numPunters);
         scoring.scores.forEach(score -> {
             int computed = state.getScore(score.punter);
             if (score.score != computed) {
