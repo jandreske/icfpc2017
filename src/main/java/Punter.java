@@ -10,12 +10,49 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+
 public class Punter {
 
     private static final Logger LOG = LoggerFactory.getLogger(Punter.class);
 
     public static void main(String[] args) {
-        System.out.println("Hello Punter!");
+        boolean online = false;
+        String server = "";
+        int port = 0;
+
+        if (args.length > 0) {
+            server = "punter.inf.ed.ac.uk";
+            port = Integer.parseInt(args[0]);
+            online = true;
+        }
+
+        if (online) {
+            startOnlineGame(server, port);
+        } else {
+            runOfflineRound();
+        }
+    }
+
+    private static void runOfflineRound() {
+        System.out.println("Offline mode not yet implemented.");
+    }
+
+    private static void startOnlineGame(String server, int port) {
+        try (Socket client = new Socket(server, port)) {
+            DataInputStream input = new DataInputStream(client.getInputStream());
+            DataOutputStream output = new DataOutputStream(client.getOutputStream());
+
+            new Punter().runGame(input, output);
+
+            output.close();
+            input.close();
+        } catch (IOException e) {
+            LOG.error("Unexpected Exception: ", e);
+            throw new RuntimeException(e);
+        }
     }
 
 
