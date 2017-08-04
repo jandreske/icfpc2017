@@ -2,8 +2,10 @@ package io;
 
 public class River {
 
-    private final int source;
-    private final int target;
+    private int source;
+    private int target;
+
+    public River() {}
 
     public River(int source, int target) {
         this.source = source;

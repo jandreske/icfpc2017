@@ -6,8 +6,8 @@ public class Handshake {
 
         private final String me;
 
-        public Request(String myName) {
-            me = myName;
+        public Request(String me) {
+            this.me = me;
         }
 
         public String getMe() {
@@ -17,11 +17,13 @@ public class Handshake {
 
     public static class Response {
 
-        private final String you;
+        private String you;
 
-        public Response(String name) {
-            you = name;
+        public Response(String you) {
+            this.you = you;
         }
+
+        public Response() {}
 
         public String getYou() {
             return you;

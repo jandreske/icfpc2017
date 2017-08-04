@@ -5,11 +5,13 @@ import java.util.Set;
 
 public class Map {
 
-    private final Set<Site> sites;
+    private Set<Site> sites;
 
-    private final Set<River> rivers;
+    private Set<River> rivers;
 
-    private final Set<Integer> mines;
+    private Set<Integer> mines;
+
+    public Map() {}
 
     public Map(Set<Site> sites, Set<River> rivers, Set<Integer> mines) {
         this.sites = Collections.unmodifiableSet(sites);

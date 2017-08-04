@@ -2,7 +2,9 @@ package io;
 
 public class Site {
 
-    private final int id;
+    private int id;
+
+    public Site() {}
 
     public Site(int id) {
         this.id = id;

@@ -1,4 +1,5 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.Handshake;
 import io.ProtocolException;
@@ -56,7 +57,7 @@ public class Punter {
     private final ObjectMapper objectMapper;
 
     private Punter() {
-        objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     void runGame(InputStream in, PrintStream out) throws IOException {
@@ -81,8 +82,11 @@ public class Punter {
         LOG.info("Map: " + objectMapper.writeValueAsString(setup.getMap()));
 
         // 2. Gameplay
-        int numMoves = setup.getMap().getRivers().size() / setup.getPunters();
-        for (int moveNum = 0; moveNum < numMoves; moveNum++) {
+        int numRivers = setup.getMap().getRivers().size();
+        int numPunters = setup.getPunters();
+        int punterId = setup.getPunter();
+        int ownMoves = (numRivers / numPunters) + ((numRivers % numPunters) > punterId ? 1 : 0);
+        for (int moveNum = 0; moveNum < ownMoves; moveNum++) {
             // TODO: a move
         }
 
