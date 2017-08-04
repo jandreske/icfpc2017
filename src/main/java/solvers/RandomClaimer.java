@@ -11,20 +11,18 @@ public class RandomClaimer implements Solver {
 
     private static final Logger LOG = LoggerFactory.getLogger(RandomClaimer.class);
 
-    private GameState state;
 
 
     @Override
-    public Move getNextMove(GameState newState, Gameplay.Request request) {
-        state = newState;
-        int numRivers = state.map.getRivers().size();
+    public Move getNextMove(GameState state, Gameplay.Request request) {
+        int numRivers = state.getMap().getRivers().size();
         int item = new Random().nextInt(numRivers);
         int i = 0;
-        for (River river : state.map.getRivers()) {
+        for (River river : state.getMap().getRivers()) {
             if (i == item) {
                 Claim claim = new Claim();
                 Claim.Data data = claim.getClaim();
-                data.punter = state.punter;
+                data.punter = state.getMyPunterId();
                 data.source = river.getSource();
                 data.target = river.getTarget();
                 return claim;
@@ -35,8 +33,4 @@ public class RandomClaimer implements Solver {
         return new Pass();
     }
 
-    @Override
-    public GameState getState() {
-        return state;
-    }
 }
