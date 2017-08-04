@@ -77,9 +77,9 @@ public class Punter {
         Setup.Request setup = readJson(in, Setup.Request.class);
         Setup.Response setupResponse = new Setup.Response(setup.getPunter());
         writeJson(out, setupResponse);
-        LOG.info("Punter id: " + setup.getPunter());
-        LOG.info("Number of punters: " + setup.getPunters());
-        LOG.info("Map: " + objectMapper.writeValueAsString(setup.getMap()));
+        LOG.info("Punter id: {}", setup.getPunter());
+        LOG.info("Number of punters: {}", setup.getPunters());
+        LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
 
         // 2. Gameplay
         int numRivers = setup.getMap().getRivers().size();
@@ -112,6 +112,12 @@ public class Punter {
             }
             length = 10 * length + Character.getNumericValue(c);
         }
-        return objectMapper.readValue(in, clazz);
+        byte[] data = new byte[length];
+        int n = in.read(data);
+        if (n != length) {
+            throw new ProtocolException("only " + n + " of " + length + " bytes received");
+        }
+        LOG.info("received: {}", new String(data));
+        return objectMapper.readValue(data, clazz);
     }
 }
