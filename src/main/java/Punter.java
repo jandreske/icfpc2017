@@ -101,12 +101,14 @@ public class Punter {
             Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                                         : Move.claim(state.getMyPunterId(), claim);
             writeJson(out, move);
+            state.applyMove(move);
             LOG.info("sent move: {}", objectMapper.writeValueAsString(move));
         }
 
         LOG.info("Receiving scoring info...");
         Scoring.Data scoring = readJson(in, Scoring.class).stop;
         scoring.moves.forEach(state::applyMove);
+        LOG.info("number of own rivers: {}", state.getOwnRivers().size());
         scoring.scores.forEach(score -> {
             int computed = state.getScore(score.punter);
             if (score.score != computed) {

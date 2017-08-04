@@ -48,6 +48,12 @@ public class GameState {
                 .collect(Collectors.toSet());
     }
 
+    public Set<River> getUnclaimedRiversTouching(int siteId) {
+        return map.getRivers().stream()
+                .filter(r -> r.touches(siteId) || !r.isClaimed())
+                .collect(Collectors.toSet());
+    }
+
     public Set<River> getOwnRiversTouching(int siteId) {
         return map.getRivers().stream()
                 .filter(r -> r.getOwner() == myPunterId && r.touches(siteId))
@@ -80,7 +86,7 @@ public class GameState {
         Move.ClaimData claim = move.getClaim();
         if (claim != null) {
             River river = getRiver(claim.source, claim.target).get();
-            if (river.isClaimed()) {
+            if (river.isClaimed() && claim.punter != myPunterId) {
                 throw new LogicException("river " + river + " claimed by " + claim.punter + " but already owned by " + river.getOwner());
             }
             river.setOwner(claim.punter);
