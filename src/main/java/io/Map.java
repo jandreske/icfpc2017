@@ -17,4 +17,15 @@ public class Map {
         this.mines = Collections.unmodifiableSet(mines);
     }
 
+    public Set<Site> getSites() {
+        return sites;
+    }
+
+    public Set<River> getRivers() {
+        return rivers;
+    }
+
+    public Set<Integer> getMines() {
+        return mines;
+    }
 }
