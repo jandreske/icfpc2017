@@ -4,6 +4,9 @@ import io.*;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class GameState {
 
@@ -13,13 +16,10 @@ public class GameState {
 
     private final Map map;
 
-    private final java.util.Map<River, Integer> rivers;
-
     public GameState(Setup.Request setup) {
         myPunterId = setup.getPunter();
         numPunters = setup.getPunters();
         map = setup.getMap();
-        rivers = new HashMap<>(map.getRivers().size());
     }
 
     public int getMyPunterId() {
@@ -34,23 +34,34 @@ public class GameState {
         return map;
     }
 
-    /**
-     * Rivers and their owners.
-     */
-    public java.util.Map<River, Integer> getRivers() {
-        return Collections.unmodifiableMap(rivers);
+    public Set<River> getUnclaimedRivers() {
+        return map.getRivers().stream()
+                .filter(r -> !r.isClaimed())
+                .collect(Collectors.toSet());
     }
 
-    /**
-     * Determine the owner of a given river
-     * @return The id of the owner, or -1 if the river is not owned by anyone
-     */
-    public int getOwner(River river) {
-        Integer owner = rivers.get(river);
-        if (owner == null) {
-            return -1;
-        }
-        return owner;
+    public Set<River> getRiversTouching(int siteId) {
+        return map.getRivers().stream()
+                .filter(r -> r.touches(siteId))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<River> getOwnRiversTouching(int siteId) {
+        return map.getRivers().stream()
+                .filter(r -> r.getOwner() == myPunterId && r.touches(siteId))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<River> getOwnRivers() {
+        return map.getRivers().stream()
+                .filter(r -> r.getOwner() == myPunterId)
+                .collect(Collectors.toSet());
+    }
+
+    public Optional<River> getRiver(int source, int target) {
+        return map.getRivers().stream()
+                .filter(r -> r.getSource() == source && r.getTarget() == target)
+                .findAny();
     }
 
     /**
@@ -61,12 +72,11 @@ public class GameState {
     public boolean applyMove(Move move) {
         Claim.Data claim = move.getClaim();
         if (claim != null) {
-            River river = new River(claim.source, claim.target);
-            Integer owner = rivers.get(river);
-            if (owner != null) {
-                throw new LogicException("river " + river + " claimed by " + claim.punter + " but already owned by " + owner);
+            River river = getRiver(claim.source, claim.target).get();
+            if (river.isClaimed()) {
+                throw new LogicException("river " + river + " claimed by " + claim.punter + " but already owned by " + river.getOwner());
             }
-            rivers.put(river, claim.punter);
+            river.setOwner(claim.punter);
             return true;
         }
         return false;

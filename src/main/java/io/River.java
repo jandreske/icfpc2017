@@ -5,6 +5,8 @@ public class River {
     private int source;
     private int target;
 
+    private int owner = -1;
+
     public River() {}
 
     public River(int source, int target) {
@@ -22,6 +24,22 @@ public class River {
 
     public String toString() {
         return source + "-" + target;
+    }
+
+    public boolean touches(int siteId) {
+        return source == siteId || target == siteId;
+    }
+
+    public int getOwner() {
+        return owner;
+    }
+
+    public void setOwner(int owner) {
+        this.owner = owner;
+    }
+
+    public boolean isClaimed() {
+        return owner >= 0;
     }
 
     @Override
