@@ -16,6 +16,18 @@ public class ExpandingMineClaimer implements Solver {
         Set<Integer> mines = state.getMap().getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
 
+        //highest priority: if we cann connect to unconnected own sub graphs, we do it
+        for (River river : freeRivers) {
+            boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
+            if (!connectedSource) continue;
+            boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0);
+            if (!connectedTarget) continue;
+
+            if (!state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) {
+                return river;
+            }
+        }
+
         for (Integer mine : mines) {
             Set<River> ownRivers = state.getOwnRiversTouching(mine);
             //if we already have a river at that mine, we dont want another one
@@ -40,9 +52,19 @@ public class ExpandingMineClaimer implements Solver {
         //if we dont want a river at a mine, lets expand
         //lets check all the free ones and pick one
         for (River river : freeRivers) {
-            //TODO: if we have something touching both sides, check whether they are already connected
-            if (state.getOwnRiversTouching(river.getSource()).size() > 0) return river;
-            if (state.getOwnRiversTouching(river.getTarget()).size() > 0) return river;
+            boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
+            boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0);
+
+            //ignore those unconnected to our current rivers
+            if (!connectedSource && ! connectedTarget) continue;
+
+            if (connectedSource && connectedTarget) {
+                // both sides touch one of ours - if they are already connected, ignore
+                if (state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) continue;
+            }
+
+            //only one side is connected, take it
+            return river;
         }
 
         //nothing cool found, take any free one
