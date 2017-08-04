@@ -95,6 +95,14 @@ public class GameState {
         return false;
     }
 
+    /**
+     * Can punter reach site1 from site2 using his claimed rivers?
+     */
+    public boolean canReach(int punter, int site1, int site2) {
+        GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
+        return punterMap.hasRoute(site1, site2);
+    }
+
     public int getScore(int punter) {
         GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
         return map.getMines().stream()
