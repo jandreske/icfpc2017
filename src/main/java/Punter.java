@@ -86,17 +86,17 @@ public class Punter {
         LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
 
         // 2. Gameplay
+        GameState state = new GameState(setup);
         int numRivers = setup.getMap().getRivers().size();
         int numPunters = setup.getPunters();
         int punterId = setup.getPunter();
         int ownMoves = (numRivers / numPunters) + ((numRivers % numPunters) > punterId ? 1 : 0);
         for (int moveNum = 0; moveNum < ownMoves; moveNum++) {
             Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
-            GameState state = new GameState();
-            state.punter = punterId;
-            state.map = setup.getMap();
+            moveRequest.getMove().moves.forEach(state::applyMove);
             Move move = solver.getNextMove(state, moveRequest);
             writeJson(out, move);
+            LOG.info("sent move: {}", move);
         }
 
         LOG.info("Receiving scoring info...");

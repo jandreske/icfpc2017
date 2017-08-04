@@ -13,6 +13,9 @@ public class Gameplay {
 
         private MoveData move;
 
+        public MoveData getMove() {
+            return move;
+        }
     }
 
     // Response is a Move
