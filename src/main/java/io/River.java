@@ -1,5 +1,7 @@
 package io;
 
+import java.beans.Transient;
+
 public class River {
 
     private int source;
@@ -30,6 +32,7 @@ public class River {
         return source == siteId || target == siteId;
     }
 
+    @Transient
     public int getOwner() {
         return owner;
     }

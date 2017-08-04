@@ -2,8 +2,6 @@ package state;
 
 import io.*;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -70,7 +68,7 @@ public class GameState {
      *  {@code false} if the move was a pass
      */
     public boolean applyMove(Move move) {
-        Claim.Data claim = move.getClaim();
+        Move.ClaimData claim = move.getClaim();
         if (claim != null) {
             River river = getRiver(claim.source, claim.target).get();
             if (river.isClaimed()) {

@@ -11,26 +11,21 @@ public class RandomClaimer implements Solver {
 
     private static final Logger LOG = LoggerFactory.getLogger(RandomClaimer.class);
 
-
+    private final Random random = new Random();
 
     @Override
-    public Move getNextMove(GameState state, Gameplay.Request request) {
+    public River getNextMove(GameState state) {
         int numRivers = state.getMap().getRivers().size();
-        int item = new Random().nextInt(numRivers);
+        int item = random.nextInt(numRivers);
         int i = 0;
         for (River river : state.getMap().getRivers()) {
             if (i == item) {
-                Claim claim = new Claim();
-                Claim.Data data = claim.getClaim();
-                data.punter = state.getMyPunterId();
-                data.source = river.getSource();
-                data.target = river.getTarget();
-                return claim;
+                return river;
             }
             i++;
         }
         LOG.error("Failure when trying to claim random river");
-        return new Pass();
+        return null;
     }
 
 }

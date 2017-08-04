@@ -94,7 +94,9 @@ public class Punter {
         for (int moveNum = 0; moveNum < ownMoves; moveNum++) {
             Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
             moveRequest.getMove().moves.forEach(state::applyMove);
-            Move move = solver.getNextMove(state, moveRequest);
+            River claim = solver.getNextMove(state);
+            Move move = (claim == null) ? Move.pass(state.getMyPunterId())
+                                        : Move.claim(state.getMyPunterId(), claim);
             writeJson(out, move);
             LOG.info("sent move: {}", move);
         }
