@@ -15,7 +15,7 @@ public class Claim implements Move {
 
     }
 
-    private Data claim;
+    private Data claim = new Data();
 
     @Override
     public Claim.Data getClaim() {

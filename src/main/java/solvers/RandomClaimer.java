@@ -29,6 +29,7 @@ public class RandomClaimer implements Solver {
                 data.target = river.getTarget();
                 return claim;
             }
+            i++;
         }
         LOG.error("Failure when trying to claim random river");
         return new Pass();
