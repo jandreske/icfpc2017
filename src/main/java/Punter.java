@@ -113,11 +113,15 @@ public class Punter {
             length = 10 * length + Character.getNumericValue(c);
         }
         byte[] data = new byte[length];
-        int n = in.read(data);
-        if (n != length) {
-            throw new ProtocolException("only " + n + " of " + length + " bytes received");
+        for (int n = 0; n < length; ) {
+            int m = in.read(data, n, length - n);
+            if (m < 0) {
+                throw new ProtocolException("unexpected end of input at " + n);
+            }
+            n += m;
         }
         LOG.info("received: {}", new String(data));
         return objectMapper.readValue(data, clazz);
     }
+
 }
