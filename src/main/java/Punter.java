@@ -16,6 +16,9 @@ import java.util.concurrent.*;
 
 public class Punter {
 
+    private static final int TIME_OUT_MS = 650;
+    public static final int SOCKET_TIMEOUT_MS = 5 * 60 * 1000;
+
     private static Solver getSolver(String arg) {
         switch (arg) {
             case "random":      return new RandomClaimer();
@@ -65,7 +68,7 @@ public class Punter {
     private static void startOnlineGame(String server, int port, Solver solver) {
         Scoring.Data scoring = null;
         try (Socket client = new Socket(server, port)) {
-            client.setSoTimeout(60000);
+            client.setSoTimeout(SOCKET_TIMEOUT_MS);
             InputStream input = client.getInputStream();
             OutputStream output = client.getOutputStream();
             Punter punter = new Punter(solver);
@@ -139,7 +142,7 @@ public class Punter {
                     }
                 }
 
-                River claim = getNextMoveWithTimeout(state, 900);
+                River claim = getNextMoveWithTimeout(state, TIME_OUT_MS);
 
                 Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                         : Move.claim(state.getMyPunterId(), claim);
@@ -226,7 +229,7 @@ public class Punter {
                 throw new ProtocolException("state not supplied in offline mode");
             }
             moveRequest.getMove().moves.forEach(state::applyMove);
-            River claim = getNextMoveWithTimeout(state, 650);
+            River claim = getNextMoveWithTimeout(state, TIME_OUT_MS);
             Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                     : Move.claim(state.getMyPunterId(), claim);
             state.applyMove(move);
