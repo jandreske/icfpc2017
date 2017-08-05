@@ -72,12 +72,8 @@ public class Move {
         this.state = state;
     }
 
-    public boolean isClaim() {
-        return claim != null;
-    }
-
     @Override
     public String toString() {
-        return (isClaim() ? claim.toString() : pass.toString());
+        return (claim != null ? claim.toString() : pass.toString());
     }
 }

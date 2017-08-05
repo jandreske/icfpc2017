@@ -2,6 +2,7 @@ package state;
 
 import io.*;
 
+import java.beans.Transient;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -9,13 +10,15 @@ import java.util.stream.Collectors;
 
 public class GameState {
 
-    private final int myPunterId;
+    private int myPunterId;
 
-    private final int numPunters;
+    private int numPunters;
 
-    private final Map map;
+    private Map map;
 
-    private final GraphMap graphMap;
+    private GraphMap graphMap;
+
+    public GameState() {}
 
     private int score = -1;
 
@@ -24,6 +27,14 @@ public class GameState {
         numPunters = setup.getPunters();
         map = setup.getMap();
         graphMap = new GraphMap(map.getSites(), map.getRivers());
+    }
+
+    @Transient
+    private GraphMap getGraphMap() {
+        if (graphMap == null) {
+            graphMap = new GraphMap(map.getSites(), map.getRivers());
+        }
+        return graphMap;
     }
 
     public int getMyPunterId() {
@@ -38,6 +49,7 @@ public class GameState {
         return map;
     }
 
+    @Transient
     public Set<River> getUnclaimedRivers() {
         return map.getRivers().stream()
                 .filter(r -> !r.isClaimed())
@@ -62,6 +74,7 @@ public class GameState {
                 .collect(Collectors.toSet());
     }
 
+    @Transient
     public Set<River> getOwnRivers() {
         return getRiversByOwner(myPunterId);
     }
@@ -131,12 +144,12 @@ public class GameState {
         if (site.getId() == mine || !punterMap.hasRoute(mine, site.getId())) {
             return 0;
         }
-        int shortest = graphMap.getShortestRouteLength(mine, site.getId());
+        int shortest = getGraphMap().getShortestRouteLength(mine, site.getId());
         return shortest * shortest;
     }
 
     public List<River> getShortestRoute(int site1, int site2) {
-        return graphMap.getShortestRoute(site1, site2);
+        return getGraphMap().getShortestRoute(site1, site2);
     }
 
     public List<River> getShortestOpenRoute(int punterId, int site1, int site2) {
@@ -158,4 +171,16 @@ public class GameState {
         int newScore = getScore(newMap);
         return newScore - score;
     }
+
+    // API ideas: best candidate rivers, considering already taken ones
+    @Transient
+    public List<River> getMostPromisingRivers() {
+        Set<River> ownOrUnclaimed = map.getRivers().stream()
+                .filter(r -> r.getOwner() == myPunterId || !r.isClaimed())
+                .collect(Collectors.toSet());
+        GraphMap graph = new GraphMap(map.getSites(), ownOrUnclaimed);
+        // TODO
+        return null;
+    }
+
 }
