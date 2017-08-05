@@ -262,6 +262,7 @@ public class Punter {
                 return objectMapper.readValue(data, clazz);
             }
             catch (JsonMappingException ex) {
+                LOG.warn("expected exception trying JSON", ex);
                 // continue
             }
         }
