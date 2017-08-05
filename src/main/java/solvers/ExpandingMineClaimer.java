@@ -17,7 +17,8 @@ public class ExpandingMineClaimer implements Solver {
         Set<Integer> mines = state.getMap().getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
 
-        //highest priority: if we cann connect to unconnected own sub graphs, we do it
+        //highest priority: if we can connect to unconnected own sub graphs, we do it
+        //TODO also connect subgraph to unconnected mines
         for (River river : freeRivers) {
             boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
             if (!connectedSource) continue;

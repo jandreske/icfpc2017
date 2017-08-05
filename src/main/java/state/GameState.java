@@ -110,6 +110,12 @@ public class GameState {
                 .sum();
     }
 
+    public int getScore(GraphMap punterMap) {
+        return map.getMines().stream()
+                .mapToInt(mine -> getScore(punterMap, mine))
+                .sum();
+    }
+
     private int getScore(GraphMap punterMap, int mine) {
         return map.getSites().stream()
                 .mapToInt(site -> getScore(punterMap, mine, site))
@@ -130,27 +136,11 @@ public class GameState {
 
     public int getPotentialPoints(River river) {
         if (river.isClaimed()) return 0;
-        boolean sourceConnected = getOwnRiversTouching(river.getSource()).size() > 0;
-        boolean targetConnected = getOwnRiversTouching(river.getTarget()).size() > 0;
-        int maxPoints = 0;
-        for (int mine : getMap().getMines()) {
-            boolean reachesSource = sourceConnected && canReach(myPunterId, mine, river.getSource());
-            boolean reachesTarget = targetConnected && canReach(myPunterId, mine, river.getTarget());
-            //if the mine is connected to both sides anyway, nothing is gained
-            if (reachesSource && reachesTarget) continue;
-            //if the mine is connected to neither side, nothing is gained
-            if (!reachesSource && !reachesTarget) continue;
-            //if the mine is only connected to source, the points are distance to target squared
-            if (reachesSource) {
-                int points = getShortestRoute(mine, river.getTarget()).size();
-                maxPoints = Math.max(maxPoints, points * points);
-            }
-            //if the mine is only connected to target, the points are distance to source squared
-            if (reachesTarget) {
-                int points = getShortestRoute(mine, river.getSource()).size();
-                maxPoints = Math.max(maxPoints, points * points);
-            }
-        }
-        return maxPoints;
+        int currentScore = getScore(myPunterId);
+        Set<River> rivers = getRiversByOwner(myPunterId);
+        rivers.add(river);
+        GraphMap newMap = new GraphMap(map.getSites(), rivers);
+        int newScore = getScore(newMap);
+        return newScore - currentScore;
     }
 }
