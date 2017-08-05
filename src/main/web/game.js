@@ -8,7 +8,9 @@ const UNIT_COLOR           = '#ffb000';
 const UNIT_OVERLAP_COLOR   = '#ff6000';
 const PIVOT_COLOR          = '#209010';
 
-var PUNTER_COLORS = ['#ff0000','#00ff00','#2020ff','#eeee00','#00eeee','#ee00ee'];
+var PUNTER_COLORS = ['#ff0000','#00ff00','#2020ff','#ffff00','#00ffff','#ff00ff'
+                    ,'#ff8000','#80ff00','#ff0080','#00ff80','#0080ff'
+                    ];
 
 
 var xoff;
@@ -36,7 +38,7 @@ function loadGame(f) {
     var reader = new FileReader();
     reader.onload = function(e) {
         game = JSON.parse(e.target.result);
-        $('#lbl_punters').text(game.setup.punters);
+        $('#lbl_punters').html(showPunters(game.setup.punters));
         $('#lbl_my_id').text(game.setup.punter);
         $('#lbl_sites').text(game.setup.map.sites.length);
         $('#lbl_rivers').text(game.setup.map.rivers.length);
@@ -60,6 +62,14 @@ function loadGame(f) {
         nextMove = 0;
     };
     reader.readAsText(f);
+}
+
+function showPunters(n) {
+    var s = "";
+    for (var i = 0; i < n; i++) {
+        s += " <span style='background-color: " + PUNTER_COLORS[i] + ";'>" + i + "</span>";
+    }
+    return s;
 }
 
 
@@ -90,8 +100,8 @@ function drawRiver(c, river) {
     if (river.owner >= 0) {
         c.fillStyle = PUNTER_COLORS[river.owner];
         c.strokeStyle = PUNTER_COLORS[river.owner];
+        c.lineWidth = 4;
     }
-    c.lineWidth = 4;
     c.beginPath();
     var site = get_site(river.source);
     var x = translate_x(site.x);
@@ -151,14 +161,17 @@ function redraw() {
 
 
 function runNextMove() {
-    var move = game.moves[nextMove++];
     var n = game.setup.map.rivers.length;
-    var river = get_river(move.source, move.target);
+    var river;
+    do {
+        var move = game.moves[nextMove++];
+        river = get_river(move.source, move.target);
+    } while (nextMove < n && river.owner >= 0);
     river.owner = move.punter;
     redraw();
 }
 
-var playSpeedFps = 5;
+var playSpeedFps = 8;
 var timer;
 
 function autoPlay() {
