@@ -83,6 +83,7 @@ public class HeuristicSolver implements Solver {
             bestMoveSoFar = null;
             bestMoveValue = null;
         }
+        candidates.clear();
     }
 
     @Override
