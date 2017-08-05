@@ -121,10 +121,12 @@ function drawSite(c, site) {
     var cy = translate_y(site.y);
     c.save();
     c.beginPath();
+    var radius = 9;
     if (game.setup.map.mines.indexOf(site.id) >= 0) {
         c.fillStyle = 'red';
+        radius = 12;
     }
-    c.arc(cx, cy, 10, 0, 2*Math.PI);
+    c.arc(cx, cy, radius, 0, 2*Math.PI);
     c.fill();
     c.stroke();
     c.restore();
