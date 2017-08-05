@@ -11,7 +11,7 @@ import state.GameState;
 import java.io.*;
 
 import java.net.Socket;
-import java.util.Arrays;
+import java.util.concurrent.*;
 
 public class Punter {
 
@@ -27,6 +27,7 @@ public class Punter {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(Punter.class);
+    private final ExecutorService timeoutExecutorService = Executors.newSingleThreadExecutor();
 
     public static void main(String[] args) {
         boolean online = false;
@@ -135,7 +136,9 @@ public class Punter {
                         record.println(objectMapper.writeValueAsString(claim));
                     }
                 }
-                River claim = solver.getNextMove(state);
+
+                River claim = getNextMoveWithTimeout(state, 900);
+
                 Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                         : Move.claim(state.getMyPunterId(), claim);
                 writeJson(out, move);
@@ -163,7 +166,27 @@ public class Punter {
                 }
             });
             record.println("]}");
+            timeoutExecutorService.shutdown();
             return scoring;
+        }
+    }
+
+    private River getNextMoveWithTimeout(GameState state, int timeOutMs) {
+        java.util.concurrent.Future<River> future = timeoutExecutorService.submit(() -> solver.getNextMove(state));
+        try {
+            return future.get(timeOutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            //something interrupted, probably your service is shutting down
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            //error happened while executing
+            LOG.error("Unexpected exception", e);
+            return null;
+        } catch (TimeoutException e) {
+            LOG.warn("Timeout, taking best option so far");
+            future.cancel(true);
+            return solver.getBestChoice();
         }
     }
 
@@ -201,7 +224,7 @@ public class Punter {
                 throw new ProtocolException("state not supplied in offline mode");
             }
             moveRequest.getMove().moves.forEach(state::applyMove);
-            River claim = solver.getNextMove(state);
+            River claim = getNextMoveWithTimeout(state, 900);
             Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                     : Move.claim(state.getMyPunterId(), claim);
             state.applyMove(move);
@@ -212,6 +235,7 @@ public class Punter {
             Scoring scoring = (Scoring) req;
             LOG.info("Scoring received: {}", scoring);
         }
+        timeoutExecutorService.shutdown();
     }
 
     private void writeJson(PrintStream out, Object value) throws JsonProcessingException {
