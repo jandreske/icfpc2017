@@ -32,6 +32,7 @@ tasks.withType(FindBugs) {
 
 dependencies {
     compile 'org.jgrapht:jgrapht-core:1.0.1'
+    compile group: 'com.google.guava', name: 'guava', version: '22.0'
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.0'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0'
     compile 'org.slf4j:slf4j-api:1.7.25'

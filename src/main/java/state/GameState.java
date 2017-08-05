@@ -183,4 +183,10 @@ public class GameState {
         return null;
     }
 
+    /**
+     * Is the given site a mine?
+     */
+    public boolean isMine(int siteId) {
+        return map.getMines().contains(siteId);
+    }
 }

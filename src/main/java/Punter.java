@@ -6,6 +6,7 @@ import io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import solvers.*;
+import solvers.chris.HeuristicSolver;
 import state.GameState;
 
 import java.io.*;
@@ -22,6 +23,7 @@ public class Punter {
             case "maxpoint":    return new MaxPointClaimer();
             case "expanding":   return new ExpandingMineClaimer();
             case "connect":     return new MineConnectClaimer();
+            case "heuristic":   return new HeuristicSolver();
             default:            return new MineConnectClaimer();
         }
     }
@@ -224,7 +226,7 @@ public class Punter {
                 throw new ProtocolException("state not supplied in offline mode");
             }
             moveRequest.getMove().moves.forEach(state::applyMove);
-            River claim = getNextMoveWithTimeout(state, 900);
+            River claim = getNextMoveWithTimeout(state, 650);
             Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                     : Move.claim(state.getMyPunterId(), claim);
             state.applyMove(move);
@@ -262,7 +264,7 @@ public class Punter {
                 return objectMapper.readValue(data, clazz);
             }
             catch (JsonMappingException ex) {
-                LOG.warn("expected exception trying JSON", ex);
+                LOG.debug("expected exception trying JSON", ex);
                 // continue
             }
         }
