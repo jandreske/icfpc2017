@@ -10,7 +10,9 @@ import solvers.RandomClaimer;
 import solvers.Solver;
 import state.GameState;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Set;
 
 public class HeuristicSolver implements Solver {
@@ -53,13 +55,21 @@ public class HeuristicSolver implements Solver {
                 } else if (state.isMine(river.getTarget())) {
                     addCandidate(RiverValue.CONNECT_MINE, river);
                 } else {
-                    addCandidate(RiverValue.EXTEND, river);
+                    if (state.canReachMine(state.getMyPunterId(), river.getSource())) {
+                        addCandidate(RiverValue.EXTEND_FROM_MINE, river);
+                    } else {
+                        addCandidate(RiverValue.EXTEND, river);
+                    }
                 }
             } else if (isClaimed(river.getTarget())) {
                 if (state.isMine(river.getSource())) {
                     addCandidate(RiverValue.CONNECT_MINE, river);
                 } else {
-                    addCandidate(RiverValue.EXTEND, river);
+                    if (state.canReachMine(state.getMyPunterId(), river.getTarget())) {
+                        addCandidate(RiverValue.EXTEND_FROM_MINE, river);
+                    } else {
+                        addCandidate(RiverValue.EXTEND, river);
+                    }
                 }
             } else if (state.isMine(river.getSource()) || state.isMine(river.getTarget())) {
                 addCandidate(RiverValue.MINE, river);
@@ -90,12 +100,9 @@ public class HeuristicSolver implements Solver {
     }
 
     private River chooseByDegree(Collection<River> choices) {
-        // TODO
-
-        // prefer mines with few unclaimed rivers
-        // and non-mines with many (unclaimed?)
-
-        return choices.stream().findAny().get();
+        River[] rivers = choices.toArray(new River[choices.size()]);
+        Arrays.sort(rivers, Comparator.comparingLong(this::getDegreeQuality));
+        return rivers[0];
     }
 
     @Override
@@ -126,5 +133,18 @@ public class HeuristicSolver implements Solver {
      */
     private boolean isClaimed(int site) {
         return !state.getOwnRiversTouching(site).isEmpty();
+    }
+
+    private long getDegreeQuality(River r) {
+        if (state.isMine(r.getSource()) && state.isMine(r.getTarget())) {
+            return state.getDegree(r.getSource()) + state.getDegree(r.getTarget());
+        }
+        if (state.isMine(r.getSource())) {
+            return state.getDegree(r.getSource()) + 5 - Math.max(5, state.getDegree(r.getTarget()));
+        }
+        if (state.isMine(r.getTarget())) {
+            return state.getDegree(r.getTarget()) + 5 - Math.max(5, state.getDegree(r.getSource()));
+        }
+        return 15 - (Math.max(5, state.getDegree(r.getSource())) + Math.max(5, state.getDegree(r.getTarget())));
     }
 }

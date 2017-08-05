@@ -11,6 +11,9 @@ public enum RiverValue {
      */
     CONNECT_MINE,
 
+    /** Exactly one of the endpoints is claimed by me and reachable from a mine. */
+    EXTEND_FROM_MINE,
+
     /** Exactly one of the endpoints is claimed by me. */
     EXTEND,
 

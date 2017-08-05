@@ -74,6 +74,12 @@ public class GameState {
                 .collect(Collectors.toSet());
     }
 
+    public long getDegree(int siteId) {
+        return map.getRivers().stream()
+                .filter(r -> r.touches(siteId))
+                .count();
+    }
+
     @Transient
     public Set<River> getOwnRivers() {
         return getRiversByOwner(myPunterId);
@@ -119,6 +125,12 @@ public class GameState {
     public boolean canReach(int punter, int site1, int site2) {
         GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
         return punterMap.hasRoute(site1, site2);
+    }
+
+    public boolean canReachMine(int punter, int site) {
+        GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
+        return map.getMines().stream()
+                .anyMatch(mine -> punterMap.hasRoute(site, mine));
     }
 
     public int getScore(int punter) {
