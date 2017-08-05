@@ -59,4 +59,9 @@ public class MineConnectClaimer implements Solver {
         return new Future[0];
     }
 
+    @Override
+    public String getName() {
+        return "Mine Connect Claimer";
+    }
+
 }

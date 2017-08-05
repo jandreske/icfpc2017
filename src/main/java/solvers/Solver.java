@@ -14,4 +14,6 @@ public interface Solver {
     River getNextMove(GameState state);
 
     Future[] getFutures(GameState state);
+
+    String getName();
 }

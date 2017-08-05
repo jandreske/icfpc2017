@@ -37,4 +37,9 @@ public class SimpleMineClaimer implements Solver {
     public Future[] getFutures(GameState state) {
         return new Future[0];
     }
+
+    @Override
+    public String getName() {
+        return "Simple Mine Claimer";
+    }
 }

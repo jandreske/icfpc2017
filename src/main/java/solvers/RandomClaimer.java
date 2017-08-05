@@ -33,4 +33,9 @@ public class RandomClaimer implements Solver {
         return new Future[0];
     }
 
+    @Override
+    public String getName() {
+        return "Random Claimer";
+    }
+
 }

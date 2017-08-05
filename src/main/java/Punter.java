@@ -90,7 +90,7 @@ public class Punter {
             record.println("{");
             // 0. Handshake
             LOG.info("Starting Handshake...");
-            Handshake.Request request = new Handshake.Request("A Storm of Minds");
+            Handshake.Request request = new Handshake.Request("A Storm of Minds: " + solver.getName());
             writeJson(out, request);
             Handshake.Response response = readJson(in, Handshake.Response.class);
             if (!response.getYou().equals(request.getMe())) {
@@ -168,7 +168,7 @@ public class Punter {
 
         // 0. Handshake
         LOG.info("Starting Handshake...");
-        Handshake.Request request = new Handshake.Request("A Storm of Minds");
+        Handshake.Request request = new Handshake.Request("A Storm of Minds: " + solver.getName());
         writeJson(out, request);
         Handshake.Response response = readJson(in, Handshake.Response.class);
         if (!response.getYou().equals(request.getMe())) {

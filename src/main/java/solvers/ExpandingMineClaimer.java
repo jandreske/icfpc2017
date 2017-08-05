@@ -85,4 +85,9 @@ public class ExpandingMineClaimer implements Solver {
         return new Future[]{new Future(1, 6), new Future(5, 6)};
     }
 
+    @Override
+    public String getName() {
+        return "Expanding Mine Claimer";
+    }
+
 }

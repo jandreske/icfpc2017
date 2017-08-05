@@ -36,4 +36,9 @@ public class MaxPointClaimer implements Solver {
         return new Future[0];
     }
 
+    @Override
+    public String getName() {
+        return "Max Point Claimer";
+    }
+
 }
