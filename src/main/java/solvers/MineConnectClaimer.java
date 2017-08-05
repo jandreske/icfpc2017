@@ -20,9 +20,24 @@ public class MineConnectClaimer implements Solver {
         for (int mineS : mines) {
             for (int mineT : mines) {
                 if (mineS == mineT) continue;
-                if (state.canReach(state.getMyPunterId(), mineS, mineS)) continue;
+                if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
                 List<River> path = state.getShortestOpenRoute(state.getMyPunterId(), mineS, mineT);
-                if (path.size() > 0) return path.get(0);
+                River best = null;
+                int score = 0;
+                for (River river : path) {
+                    if (!river.isClaimed()) {
+                        int myScore = 1;
+                        if (mines.contains(river.getSource())) myScore += 100;
+                        if (mines.contains(river.getTarget())) myScore += 100;
+                        if (state.getOwnRiversTouching(river.getSource()).size() > 0) myScore += 60;
+                        if (state.getOwnRiversTouching(river.getTarget()).size() > 0) myScore += 60;
+                        if (myScore > score) {
+                            best = river;
+                            score = myScore;
+                        }
+                    }
+                }
+                if (best != null) return best;
             }
         }
 
