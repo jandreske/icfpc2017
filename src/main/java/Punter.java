@@ -18,7 +18,7 @@ import java.util.concurrent.*;
 public class Punter {
 
     private static final int TIME_OUT_MS = 650;
-    private static final int SOCKET_TIMEOUT_MS = 5 * 60 * 1000;
+    private static final int SOCKET_TIMEOUT_MS = 10 * 60 * 1000;
 
     private static Solver getSolver(String arg) {
         switch (arg) {
@@ -32,6 +32,10 @@ public class Punter {
             case "future2":     return new FutureConnecter(2);
             case "future3":     return new FutureConnecter(3);
             case "future4":     return new FutureConnecter(4);
+            case "back3":       return new FutureBack(3);
+            case "back4":       return new FutureBack(4);
+            case "back5":       return new FutureBack(5);
+            case "back6":       return new FutureBack(6);
             default:            return new MineConnectClaimer();
         }
     }

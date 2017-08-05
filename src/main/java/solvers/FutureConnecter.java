@@ -119,7 +119,7 @@ public class FutureConnecter implements Solver {
 
     @Override
     public String getName() {
-        return "Future Connector";
+        return "Future Risk " + risk;
     }
 
     @Override
