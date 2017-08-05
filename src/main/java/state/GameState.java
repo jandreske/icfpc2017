@@ -17,6 +17,7 @@ public class GameState {
     private Map map;
 
     private GraphMap graphMap;
+    private Future[] futures;
 
     public GameState() {}
 
@@ -204,5 +205,31 @@ public class GameState {
      */
     public boolean isMine(int siteId) {
         return map.getMines().contains(siteId);
+    }
+
+    public void setFutures(Future[] futures) {
+        this.futures = futures;
+    }
+
+    public Future[] getFutures() {
+        return futures;
+    }
+
+    public boolean isFutureComplete(Future future) {
+        return canReach(myPunterId, future.getSource(), future.getTarget());
+    }
+
+    public int missingStepsForFuture(Future future) {
+        List<River> path = getShortestOpenRoute(myPunterId, future.getSource(), future.getTarget());
+        if (path.isEmpty()) return -1;
+        return (int) path.stream().filter(river -> !river.isClaimed()).count();
+    }
+
+    public River nextStepForFuture(Future future) {
+        List<River> path = getShortestOpenRoute(myPunterId, future.getSource(), future.getTarget());
+        for (River river : path) {
+            if (!river.isClaimed()) return river;
+        }
+        return null;
     }
 }

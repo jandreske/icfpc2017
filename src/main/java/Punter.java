@@ -3,6 +3,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.*;
+import io.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import solvers.*;
@@ -17,7 +18,7 @@ import java.util.concurrent.*;
 public class Punter {
 
     private static final int TIME_OUT_MS = 650;
-    public static final int SOCKET_TIMEOUT_MS = 5 * 60 * 1000;
+    private static final int SOCKET_TIMEOUT_MS = 5 * 60 * 1000;
 
     private static Solver getSolver(String arg) {
         switch (arg) {
@@ -27,6 +28,10 @@ public class Punter {
             case "expanding":   return new ExpandingMineClaimer();
             case "connect":     return new MineConnectClaimer();
             case "heuristic":   return new HeuristicSolver();
+            case "future1":     return new FutureConnecter(1);
+            case "future2":     return new FutureConnecter(2);
+            case "future3":     return new FutureConnecter(3);
+            case "future4":     return new FutureConnecter(4);
             default:            return new MineConnectClaimer();
         }
     }
@@ -113,7 +118,9 @@ public class Punter {
             GameState state = new GameState(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
             if (setup.getSettings() != null && setup.getSettings().getFutures()) {
-                setupResponse.setFutures(solver.getFutures(state));
+                Future[] futures = solver.getFutures(state);
+                setupResponse.setFutures(futures);
+                state.setFutures(futures);
             }
             writeJson(out, setupResponse);
             LOG.info("Sent ready message: {}", objectMapper.writeValueAsString(setupResponse));
@@ -216,7 +223,9 @@ public class Punter {
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
             setupResponse.setState(state);
             if (setup.getSettings() != null && setup.getSettings().getFutures()) {
-                setupResponse.setFutures(solver.getFutures(state));
+                Future[] futures = solver.getFutures(state);
+                setupResponse.setFutures(futures);
+                state.setFutures(futures);
             }
             writeJson(out, setupResponse);
             LOG.info("Punter id: {}", setup.getPunter());
