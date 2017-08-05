@@ -41,7 +41,7 @@ def readJson(InputStream inp) {
         }
         n += m;
     }
-    println "RECEIVED ${new String(data)}"
+    // println "RECEIVED ${new String(data)}"
     return jsonSlurper.parse(data)
 }
 
@@ -52,14 +52,13 @@ def writeJson(PrintStream out, obj) {
     out.write(':' as char)
     out.print(json)
     out.flush()
-    println "SENT ${json}"
+    // println "SENT ${json}"
 }
 
 def runSetup(punter, id) {
     punter.id = id
     println "Setting up punter ${punter}..."
     def process = new ProcessBuilder(punter.command)
-                        .redirectErrorStream(true)
                         .start()
     def inp = process.getIn()
     def msg1 = readJson(inp)
@@ -76,7 +75,7 @@ def runSetup(punter, id) {
         println "TIMEOUT in setup phase"
         System.exit(0)
     }
-    process.destroy()
+    process.waitFor()
     punter.lastMove = [pass: [punter: punter.id]]
 }
 
@@ -87,7 +86,6 @@ def getLastMoves() {
 def runMove(punter) {
     println "Getting move from punter ${punter.id}..."
     def process = new ProcessBuilder(punter.command)
-            .redirectErrorStream(true)
             .start()
     def inp = process.getIn()
     def msg1 = readJson(inp)
@@ -112,6 +110,7 @@ def runMove(punter) {
     punter.state = msg2.state
     msg2.remove('state')
     punter.lastMove = msg2
+    process.waitFor()
 }
 
 def computeScore(int punter) {
@@ -205,7 +204,8 @@ for (int move = 0;; move++) {
 
 // sending stop seems unnecessary
 
-println "Final claims: ${rivers}"
+// println "Final claims: ${rivers}"
 punters.each { p ->
-    println "Score ${p.id}, ${p.name}: ${computeScore(p.id)}"
+    int numRivers = rivers.count { it.owner == p.id }
+    println "Score ${p.id}, ${p.name}: ${computeScore(p.id)} (rivers: ${numRivers})"
 }
