@@ -80,7 +80,7 @@ public class ExpandingMineClaimer implements Solver {
 
     @Override
     public Future[] getFutures(GameState state) {
-        return new Future[]{new Future(1, 6)};
+        return new Future[]{new Future(1, 6), new Future(5, 6)};
     }
 
 }
