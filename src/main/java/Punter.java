@@ -22,7 +22,7 @@ public class Punter {
             case "maxpoint":    return new MaxPointClaimer();
             case "expanding":   return new ExpandingMineClaimer();
             case "connect":     return new MineConnectClaimer();
-            default:            return new ExpandingMineClaimer();
+            default:            return new MineConnectClaimer();
         }
     }
 
@@ -32,7 +32,10 @@ public class Punter {
         boolean online = false;
         String server = "";
         int port = 0;
-        Solver solver = getSolver(args[0]);
+        Solver solver = getSolver("default");
+        if (args.length > 0) {
+            solver = getSolver(args[0]);
+        }
 
         if (args.length > 1) {
             server = "punter.inf.ed.ac.uk";
