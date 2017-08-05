@@ -6,20 +6,21 @@ import org.slf4j.LoggerFactory;
 import state.GameState;
 
 import java.util.Random;
+import java.util.Set;
 
 public class RandomClaimer implements Solver {
 
     private static final Logger LOG = LoggerFactory.getLogger(RandomClaimer.class);
 
     private final Random random = new Random();
-    private River bestChoice = null;
 
     @Override
     public River getNextMove(GameState state) {
-        int numRivers = state.getMap().getRivers().size();
+        Set<River> rivers = state.getUnclaimedRivers();
+        int numRivers = rivers.size();
         int item = random.nextInt(numRivers);
         int i = 0;
-        for (River river : state.getMap().getRivers()) {
+        for (River river : rivers) {
             if (i == item) {
                 return river;
             }
@@ -40,12 +41,8 @@ public class RandomClaimer implements Solver {
     }
 
     @Override
-    public synchronized River getBestChoice() {
-        return bestChoice;
-    }
-
-    private synchronized void setBestChoice(River river) {
-        this.bestChoice = river;
+    public River getBestChoice() {
+        return null;
     }
 
 }
