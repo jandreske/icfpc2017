@@ -156,8 +156,12 @@ public class GameState {
         if (site.getId() == mine || !punterMap.hasRoute(mine, site.getId())) {
             return 0;
         }
-        int shortest = getGraphMap().getShortestRouteLength(mine, site.getId());
+        int shortest = getShortestRouteLength(mine, site.getId());
         return shortest * shortest;
+    }
+
+    public int getShortestRouteLength(int site1, int site2) {
+        return getGraphMap().getShortestRouteLength(site1, site2);
     }
 
     public List<River> getShortestRoute(int site1, int site2) {

@@ -13,7 +13,6 @@ import state.GameState;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Set;
 
 public class HeuristicSolver implements Solver {
 
@@ -94,17 +93,43 @@ public class HeuristicSolver implements Solver {
         if (bestValue != null) {
             LOG.info("found cadidate of value {}", bestValue);
             Collection<River> choices = candidates.get(bestValue);
-            return chooseByDegree(choices);
+            return chooseByDegree(bestValue, choices);
         }
         LOG.info("falling back to random");
         return randomClaimer.getNextMove(state);
     }
 
-    private River chooseByDegree(Collection<River> choices) {
+    private River chooseByDegree(RiverValue type, Collection<River> choices) {
         River[] rivers = choices.toArray(new River[choices.size()]);
+        if (type == RiverValue.EXTEND_FROM_MINE) {
+            return chooseLongestPath(rivers);
+        }
         Arrays.sort(rivers, Comparator.comparingLong(this::getDegreeQuality));
         return rivers[0];
     }
+
+    private River chooseLongestPath(River[] rivers) {
+        int maxSoFar = 0;
+        int maxIndex = 0;
+        for (int i = 0; i < rivers.length; i++) {
+            River river = rivers[i];
+            int site;
+            if (isClaimed(river.getTarget())) {
+                site = river.getSource();
+            } else {
+                site = river.getTarget();
+            }
+            for (int mine : state.getMap().getMines()) {
+                int dist = state.getShortestRouteLength(mine, site);
+                if (dist > maxSoFar) {
+                    maxSoFar = dist;
+                    maxIndex = i;
+                }
+            }
+        }
+        return rivers[maxIndex];
+    }
+
 
     @Override
     public Future[] getFutures(GameState state) {

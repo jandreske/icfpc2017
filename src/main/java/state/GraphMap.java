@@ -7,7 +7,7 @@ import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.AStarShortestPath;
 import org.jgrapht.graph.SimpleGraph;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class GraphMap {
@@ -35,7 +35,7 @@ class GraphMap {
     List<River> getShortestRoute(int a, int b) {
         GraphPath<Integer, River> path = spa.getPath(a, b);
         if (path == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
         return path.getEdgeList();
     }
