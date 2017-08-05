@@ -17,6 +17,8 @@ public class GameState {
 
     private final GraphMap graphMap;
 
+    private int score = -1;
+
     public GameState(Setup.Request setup) {
         myPunterId = setup.getPunter();
         numPunters = setup.getPunters();
@@ -86,10 +88,13 @@ public class GameState {
         Move.ClaimData claim = move.getClaim();
         if (claim != null) {
             River river = getRiver(claim.source, claim.target).get();
+            //TODO can this stay?
             if (river.isClaimed() && claim.punter != myPunterId) {
                 throw new LogicException("river " + river + " claimed by " + claim.punter + " but already owned by " + river.getOwner());
             }
             river.setOwner(claim.punter);
+            //reset score cache
+            if (claim.punter == myPunterId) score = -1;
             return true;
         }
         return false;
@@ -143,11 +148,14 @@ public class GameState {
 
     public int getPotentialPoints(River river) {
         if (river.isClaimed()) return 0;
-        int currentScore = getScore(myPunterId);
+        //if we did not calculate score since last own move, do it now
+        if (score == -1) {
+            score = getScore(myPunterId);
+        }
         Set<River> rivers = getRiversByOwner(myPunterId);
         rivers.add(river);
         GraphMap newMap = new GraphMap(map.getSites(), rivers);
         int newScore = getScore(newMap);
-        return newScore - currentScore;
+        return newScore - score;
     }
 }
