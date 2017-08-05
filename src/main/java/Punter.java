@@ -15,6 +15,17 @@ import java.util.Arrays;
 
 public class Punter {
 
+    private static Solver getSolver(String arg) {
+        switch (arg) {
+            case "random":      return new RandomClaimer();
+            case "simple":      return new SimpleMineClaimer();
+            case "maxpoint":    return new MaxPointClaimer();
+            case "expanding":   return new ExpandingMineClaimer();
+            case "connect":     return new MineConnectClaimer();
+            default:            return new ExpandingMineClaimer();
+        }
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(Punter.class);
 
     public static void main(String[] args) {
@@ -33,16 +44,6 @@ public class Punter {
             startOnlineGame(server, port, solver);
         } else {
             runOfflineRound(solver);
-        }
-    }
-
-    private static Solver getSolver(String arg) {
-        switch (arg) {
-            case "random":      return new RandomClaimer();
-            case "simple":      return new SimpleMineClaimer();
-            case "maxpoint":    return new MaxPointClaimer();
-            case "expanding":   return new ExpandingMineClaimer();
-            default:            return new ExpandingMineClaimer();
         }
     }
 

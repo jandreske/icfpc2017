@@ -134,6 +134,13 @@ public class GameState {
         return graphMap.getShortestRoute(site1, site2);
     }
 
+    public List<River> getShortestOpenRoute(int punterId, int site1, int site2) {
+        Set<River> rivers = getRiversByOwner(punterId);
+        rivers.addAll(getUnclaimedRivers());
+        GraphMap punterMap = new GraphMap(map.getSites(), rivers);
+        return punterMap.getShortestRoute(site1, site2);
+    }
+
     public int getPotentialPoints(River river) {
         if (river.isClaimed()) return 0;
         int currentScore = getScore(myPunterId);
