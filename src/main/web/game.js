@@ -43,6 +43,7 @@ function loadGame(f) {
         $('#lbl_sites').text(game.setup.map.sites.length);
         $('#lbl_rivers').text(game.setup.map.rivers.length);
         $('#lbl_mines').text(game.setup.map.mines.length);
+        $('#lbl_next_move').text("first (0%)");
         var min_x = game.setup.map.sites[0].x;
         var max_x = min_x;
         var min_y = game.setup.map.sites[0].y;
@@ -151,6 +152,13 @@ function drawMap() {
         drawSite(c, site);
     });
     c.restore();
+    var n = game.moves.length;
+    if (nextMove < n) {
+        var percent = (100 * nextMove / n).toFixed(1);
+        $('#lbl_next_move').text(nextMove + " (" + percent + "%)");
+    } else {
+        $('#lbl_next_move').text("done (100%)");
+    }
 }
 
 
@@ -179,6 +187,7 @@ var playSpeedFps = 8;
 var timer;
 
 function autoPlay() {
+    // TODO: adjust FPS for large numbers of moves
     if (nextMove < game.moves.length) {
         runNextMove();
         timer = setTimeout(autoPlay, 1000 / playSpeedFps);
