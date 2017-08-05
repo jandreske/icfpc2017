@@ -129,6 +129,8 @@ function drawSite(c, site) {
     c.arc(cx, cy, radius, 0, 2*Math.PI);
     c.fill();
     c.stroke();
+    c.strokeStyle = 'white';
+    c.strokeText(site.id, cx - 6, cy);
     c.restore();
 }
 
