@@ -16,4 +16,6 @@ public interface Solver {
     Future[] getFutures(GameState state);
 
     String getName();
+
+    River getBestChoice();
 }

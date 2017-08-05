@@ -13,8 +13,12 @@ public class MineConnectClaimer implements Solver {
 
     private static final Logger LOG = LoggerFactory.getLogger(MineConnectClaimer.class);
 
+    private River bestChoice = null;
+
     @Override
     public River getNextMove(GameState state) {
+        Set<River> freeRivers = state.getUnclaimedRivers();
+        setBestChoice(freeRivers.iterator().next());
         Set<Integer> mines = state.getMap().getMines();
 
         for (int mineS : mines) {
@@ -34,6 +38,7 @@ public class MineConnectClaimer implements Solver {
                         if (myScore > score) {
                             best = river;
                             score = myScore;
+                            setBestChoice(river);
                         }
                     }
                 }
@@ -42,7 +47,6 @@ public class MineConnectClaimer implements Solver {
         }
 
 
-        Set<River> freeRivers = state.getUnclaimedRivers();
         River best = null;
         int bestPoints = 0;
         for (River river : freeRivers) {
@@ -62,6 +66,7 @@ public class MineConnectClaimer implements Solver {
             if (best == null || points > bestPoints) {
                 best = river;
                 bestPoints = points;
+                setBestChoice(river);
             }
         }
 
@@ -71,12 +76,21 @@ public class MineConnectClaimer implements Solver {
 
     @Override
     public Future[] getFutures(GameState state) {
-        return new Future[0];
+        return new Future[]{new Future(1, 7), new Future(5, 7)};
     }
 
     @Override
     public String getName() {
         return "Mine Connect Claimer";
+    }
+
+    @Override
+    public synchronized River getBestChoice() {
+        return bestChoice;
+    }
+
+    private synchronized void setBestChoice(River river) {
+        this.bestChoice = river;
     }
 
 }

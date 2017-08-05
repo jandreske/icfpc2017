@@ -12,6 +12,7 @@ public class RandomClaimer implements Solver {
     private static final Logger LOG = LoggerFactory.getLogger(RandomClaimer.class);
 
     private final Random random = new Random();
+    private River bestChoice = null;
 
     @Override
     public River getNextMove(GameState state) {
@@ -36,6 +37,15 @@ public class RandomClaimer implements Solver {
     @Override
     public String getName() {
         return "Random Claimer";
+    }
+
+    @Override
+    public synchronized River getBestChoice() {
+        return bestChoice;
+    }
+
+    private synchronized void setBestChoice(River river) {
+        this.bestChoice = river;
     }
 
 }

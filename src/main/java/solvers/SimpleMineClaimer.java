@@ -12,10 +12,13 @@ public class SimpleMineClaimer implements Solver {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleMineClaimer.class);
 
+    private River bestChoice = null;
+
     @Override
     public River getNextMove(GameState state) {
         Set<Integer> mines = state.getMap().getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
+        setBestChoice(freeRivers.iterator().next());
         for (Integer mine : mines) {
             Set<River> mineRivers = state.getRiversTouching(mine);
             for (River mineRiver : mineRivers) {
@@ -25,12 +28,7 @@ public class SimpleMineClaimer implements Solver {
             }
         }
 
-        for (River freeRiver : freeRivers) {
-            return freeRiver;
-        }
-
-        LOG.error("No free rivers available");
-        return null;
+        return freeRivers.iterator().next();
     }
 
     @Override
@@ -41,5 +39,14 @@ public class SimpleMineClaimer implements Solver {
     @Override
     public String getName() {
         return "Simple Mine Claimer";
+    }
+
+    @Override
+    public synchronized River getBestChoice() {
+        return bestChoice;
+    }
+
+    private synchronized void setBestChoice(River river) {
+        this.bestChoice = river;
     }
 }

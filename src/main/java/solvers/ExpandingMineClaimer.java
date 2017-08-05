@@ -11,24 +11,13 @@ import java.util.Set;
 public class ExpandingMineClaimer implements Solver {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExpandingMineClaimer.class);
+    private River bestChoice = null;
 
     @Override
     public River getNextMove(GameState state) {
         Set<Integer> mines = state.getMap().getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
-
-//        //highest priority: if we can connect to unconnected own sub graphs, we do it
-//        //TODO also connect subgraph to unconnected mines
-//        for (River river : freeRivers) {
-//            boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
-//            if (!connectedSource) continue;
-//            boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0);
-//            if (!connectedTarget) continue;
-//
-//            if (!state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) {
-//                return river;
-//            }
-//        }
+        setBestChoice(freeRivers.iterator().next());
 
         for (Integer mine : mines) {
             Set<River> ownRivers = state.getOwnRiversTouching(mine);
@@ -46,6 +35,7 @@ public class ExpandingMineClaimer implements Solver {
                 if (best == null || opts > expansionOptions) {
                     best = river;
                     expansionOptions = opts;
+                    setBestChoice(river);
                 }
             }
             return best;
@@ -72,6 +62,7 @@ public class ExpandingMineClaimer implements Solver {
             if (best == null || points > bestPoints) {
                 best = river;
                 bestPoints = points;
+                setBestChoice(river);
             }
         }
 
@@ -81,13 +72,21 @@ public class ExpandingMineClaimer implements Solver {
 
     @Override
     public Future[] getFutures(GameState state) {
-        //TODO
-        return new Future[]{new Future(1, 6), new Future(5, 6)};
+        return new Future[0];
     }
 
     @Override
     public String getName() {
         return "Expanding Mine Claimer";
+    }
+
+    @Override
+    public synchronized River getBestChoice() {
+        return bestChoice;
+    }
+
+    private synchronized void setBestChoice(River river) {
+        this.bestChoice = river;
     }
 
 }
