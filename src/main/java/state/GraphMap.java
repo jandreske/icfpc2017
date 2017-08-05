@@ -40,4 +40,11 @@ class GraphMap {
         return spa.getPathWeight(a, b) < Double.POSITIVE_INFINITY;
     }
 
+    /**
+     * Get the number of rivers at this site.
+     */
+    int getNumberOfRivers(int site) {
+        return g.degreeOf(site);
+    }
+
 }
