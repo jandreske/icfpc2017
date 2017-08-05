@@ -21,36 +21,47 @@ public class Punter {
         boolean online = false;
         String server = "";
         int port = 0;
+        Solver solver = getSolver(args[0]);
 
-        if (args.length > 0) {
+        if (args.length > 1) {
             server = "punter.inf.ed.ac.uk";
-            port = Integer.parseInt(args[0]);
+            port = Integer.parseInt(args[1]);
             online = true;
         }
 
         if (online) {
-            startOnlineGame(server, port);
+            startOnlineGame(server, port, solver);
         } else {
-            runOfflineRound();
+            runOfflineRound(solver);
         }
     }
 
-    private static void runOfflineRound() {
+    private static Solver getSolver(String arg) {
+        switch (arg) {
+            case "random":      return new RandomClaimer();
+            case "simple":      return new SimpleMineClaimer();
+            case "maxpoint":    return new MaxPointClaimer();
+            case "expanding":   return new ExpandingMineClaimer();
+            default:            return new ExpandingMineClaimer();
+        }
+    }
+
+    private static void runOfflineRound(Solver solver) {
         try {
-            Punter punter = new Punter();
+            Punter punter = new Punter(solver);
             punter.runOfflineMove(System.in, System.out);
         } catch (IOException e) {
             LOG.error("Unexpected Exception: ", e);
         }
     }
 
-    private static void startOnlineGame(String server, int port) {
+    private static void startOnlineGame(String server, int port, Solver solver) {
         Scoring.Data scoring = null;
         try (Socket client = new Socket(server, port)) {
             client.setSoTimeout(60000);
             InputStream input = client.getInputStream();
             OutputStream output = client.getOutputStream();
-            Punter punter = new Punter();
+            Punter punter = new Punter(solver);
             scoring = punter.runOnlineGame(input, new PrintStream(output));
             output.close();
             input.close();
@@ -66,11 +77,11 @@ public class Punter {
     private final ObjectMapper objectMapper;
     private final Solver solver;
 
-    private Punter() {
+    private Punter(Solver solver) {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        solver = new ExpandingMineClaimer();
+        this.solver = solver;
     }
 
     private Scoring.Data runOnlineGame(InputStream in, PrintStream out) throws IOException {

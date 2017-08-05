@@ -1,4 +1,5 @@
 #!/bin/sh
 
-port=$1
-ssh dreske@icfp.chainalysis.com "cd ~ && ./start.sh ${port}  && tail server.log"
+solver=$1
+port=$2
+ssh dreske@icfp.chainalysis.com "cd ~ && ./start.sh ${solver} ${port}  && tail server.log"

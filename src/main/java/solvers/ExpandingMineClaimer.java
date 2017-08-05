@@ -17,18 +17,18 @@ public class ExpandingMineClaimer implements Solver {
         Set<Integer> mines = state.getMap().getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
 
-        //highest priority: if we can connect to unconnected own sub graphs, we do it
-        //TODO also connect subgraph to unconnected mines
-        for (River river : freeRivers) {
-            boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
-            if (!connectedSource) continue;
-            boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0);
-            if (!connectedTarget) continue;
-
-            if (!state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) {
-                return river;
-            }
-        }
+//        //highest priority: if we can connect to unconnected own sub graphs, we do it
+//        //TODO also connect subgraph to unconnected mines
+//        for (River river : freeRivers) {
+//            boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
+//            if (!connectedSource) continue;
+//            boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0);
+//            if (!connectedTarget) continue;
+//
+//            if (!state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) {
+//                return river;
+//            }
+//        }
 
         for (Integer mine : mines) {
             Set<River> ownRivers = state.getOwnRiversTouching(mine);
@@ -81,6 +81,7 @@ public class ExpandingMineClaimer implements Solver {
 
     @Override
     public Future[] getFutures(GameState state) {
+        //TODO
         return new Future[]{new Future(1, 6), new Future(5, 6)};
     }
 
