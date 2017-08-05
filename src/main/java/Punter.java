@@ -125,8 +125,8 @@ public class Punter {
                 Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
                 moveRequest.getMove().moves.forEach(state::applyMove);
                 for (Move move : moveRequest.getMove().moves) {
-                    if (move.isClaim()) {
-                        Move.ClaimData claim = move.getClaim();
+                    Move.ClaimData claim = move.getClaim();
+                    if (claim != null) {
                         record.print(recordSep);
                         recordSep = ',';
                         record.println(objectMapper.writeValueAsString(claim));
@@ -137,8 +137,8 @@ public class Punter {
                         : Move.claim(state.getMyPunterId(), claim);
                 writeJson(out, move);
                 state.applyMove(move);
-                if (move.isClaim()) {
-                    Move.ClaimData claim1 = move.getClaim();
+                Move.ClaimData claim1 = move.getClaim();
+                if (claim1 != null) {
                     record.print(recordSep);
                     recordSep = ',';
                     record.println(objectMapper.writeValueAsString(claim1));
@@ -227,6 +227,7 @@ public class Punter {
     }
 
     private Object readOneOf(InputStream in, Class<?>... classes) throws IOException {
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
         int length = decodeLength(in);
         byte[] data = readBytes(in, length);
         for (Class<?> clazz : classes) {
@@ -237,7 +238,8 @@ public class Punter {
                 // continue
             }
         }
-        throw new ProtocolException("expected one of " + Arrays.toString(classes));
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return objectMapper.readValue(data, classes[0]);
     }
 
     private static byte[] readBytes(InputStream in, int length) throws IOException {

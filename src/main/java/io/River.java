@@ -34,7 +34,6 @@ public class River {
         return source == siteId || target == siteId;
     }
 
-    @Transient
     public int getOwner() {
         return owner;
     }
@@ -43,6 +42,7 @@ public class River {
         this.owner = owner;
     }
 
+    @Transient
     public boolean isClaimed() {
         return owner >= 0;
     }
