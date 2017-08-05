@@ -103,7 +103,8 @@ public class Punter {
             record.println(objectMapper.writeValueAsString(setup));
 
             // 2. Gameplay
-            record.println(", \"moves\": [");
+            record.println(", \"moves\": ");
+            char recordSep = '[';
             int numRivers = setup.getMap().getRivers().size();
             int numPunters = setup.getPunters();
             int punterId = setup.getPunter();
@@ -114,6 +115,8 @@ public class Punter {
                 for (Move move : moveRequest.getMove().moves) {
                     if (move.isClaim()) {
                         Move.ClaimData claim = move.getClaim();
+                        record.print(recordSep);
+                        recordSep = ',';
                         record.println(objectMapper.writeValueAsString(claim));
                     }
                 }
