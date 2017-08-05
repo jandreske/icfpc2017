@@ -91,7 +91,7 @@ public class Punter {
             Setup.Request setup = readJson(in, Setup.Request.class);
             GameState state = new GameState(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
-            if (setup.getSettings().getFutures()) {
+            if (setup.getSettings() != null && setup.getSettings().getFutures()) {
                 setupResponse.setFutures(solver.getFutures(state));
             }
             writeJson(out, setupResponse);
@@ -167,7 +167,7 @@ public class Punter {
             GameState state = new GameState(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
             setupResponse.setState(state);
-            if (setup.getSettings().getFutures()) {
+            if (setup.getSettings() != null && setup.getSettings().getFutures()) {
                 setupResponse.setFutures(solver.getFutures(state));
             }
             writeJson(out, setupResponse);
