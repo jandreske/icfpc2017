@@ -76,7 +76,7 @@ public class MineConnectClaimer implements Solver {
 
     @Override
     public Future[] getFutures(GameState state) {
-        return new Future[]{new Future(1, 7), new Future(5, 7)};
+        return new Future[0];
     }
 
     @Override
