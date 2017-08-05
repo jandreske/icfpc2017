@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ICFP Contest 2017 - A Storm of Minds</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="game.js" ></script>
+
+<meta name='author' content='Christoph Breitkopf'>
+<meta name='copyright' content='&copy; 2017 Christoph Breitkopf and Jan Dreske'>
+<meta name='description' content='ICFP Contest 2017'>
+<link href='style.css' type='text/css' rel='stylesheet'>
+
+</head>
+<body>
+<div id="header">
+<h2>A Storm of Minds - ICFP Contest 2017</h2>
+
+<p>
+   <label for="problem">Log file</label>
+   <input type="file" name="problem" id="problem" accept=".json" />
+</p>
+  
+</div>
+
+
+<div id="main">
+
+  <canvas id="map"></canvas>
+
+  <p id="msg"> </p>
+  <p>Moves:</p>
+  <textarea id="solution"> </textarea>
+
+</div>
+
+
+<div id="controls">
+
+    <h4>Info</h4>
+
+    <p>Punters: <span id="lbl_punters">?</span></p>
+    <p>Self: <span id="lbl_my_id">?</span></p>
+    <p>Sites: <span id="lbl_sites">?</span>, rivers: <span id="lbl_rivers">?</span>,
+        mines: <span id="lbl_mines">?</span></p>
+
+<h4>Controls</h4>
+
+Units: <span id="lbl_units">?</span>
+
+  <p>
+     <input type="button" id="btn_run" value="Run" />
+     <input type="button" id="btn_pause" value="Pause" />
+     <input type="button" id="btn_move" value="Single move" />
+  </p>
+  
+
+</div>
+
+</body>
+</html>

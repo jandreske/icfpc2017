@@ -1,0 +1,21 @@
+body {
+    /* background-color: #202028;
+    color: #e0e0e0; */
+}
+
+#header {
+    padding: 4px;
+    /* text-align: center; */
+    height: 100px;
+}
+
+#controls {
+    display: inline-block;
+    vertical-align: top;
+    padding: 1% 1%;
+}
+
+#main {
+    display: inline-block;
+    padding: 1% 1%;
+}

@@ -1,0 +1,68 @@
+{
+  "setup" : {
+    "punters": 2, "punter": 1,
+    "map": {
+      "sites": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 1,
+          "x": 1,
+          "y": 0
+        },
+        {
+          "id": 2,
+          "x": 0,
+          "y": 1
+        },
+        {
+          "id": 3,
+          "x": 1,
+          "y": 1
+        },
+        {
+          "id": 4,
+          "x": 0.5,
+          "y": 1.6
+        }
+      ],
+      "rivers": [
+        {
+          "source": 0,
+          "target": 1
+        },
+        {
+          "source": 1,
+          "target": 3
+        },
+        {
+          "source": 0,
+          "target": 2
+        },
+        {
+          "source": 0,
+          "target": 4
+        },
+        {
+          "source": 2,
+          "target": 4
+        },
+        {
+          "source": 3,
+          "target": 4
+        }
+      ],
+      "mines": [
+        4
+      ]
+    }
+  },
+  "moves": [
+    {"punter":0, "source":0, "target":1},
+    {"punter":1, "source":1, "target":3},
+    {"punter":0, "source":0, "target":4}
+  ]
+}

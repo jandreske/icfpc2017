@@ -4,6 +4,8 @@ public class Site {
 
     private int id;
 
+    private double x, y;
+
     public Site() {}
 
     public Site(int id) {

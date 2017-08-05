@@ -74,61 +74,74 @@ public class Punter {
     }
 
     private Scoring.Data runOnlineGame(InputStream in, PrintStream out) throws IOException {
-
-        // 0. Handshake
-        LOG.info("Starting Handshake...");
-        Handshake.Request request = new Handshake.Request("A Storm of Minds");
-        writeJson(out, request);
-        Handshake.Response response = readJson(in, Handshake.Response.class);
-        if (!response.getYou().equals(request.getMe())) {
-            throw new ProtocolException("Handshake: Name did not match [request: '" + request.getMe() + "', response: '" + response.getYou() + "']");
-        }
-        LOG.info("Handshake completed");
-
-        // 1. Setup
-        LOG.info("Receiving setup...");
-        Setup.Request setup = readJson(in, Setup.Request.class);
-        GameState state = new GameState(setup);
-        Setup.Response setupResponse = new Setup.Response(setup.getPunter());
-        if (setup.getSettings().getFutures()) {
-            setupResponse.setFutures(solver.getFutures(state));
-        }
-        writeJson(out, setupResponse);
-        LOG.info("Sent ready message: {}", objectMapper.writeValueAsString(setupResponse));
-        LOG.info("Punter id: {}", setup.getPunter());
-        LOG.info("Number of punters: {}", setup.getPunters());
-        LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
-
-        // 2. Gameplay
-        int numRivers = setup.getMap().getRivers().size();
-        int numPunters = setup.getPunters();
-        int punterId = setup.getPunter();
-        int ownMoves = (numRivers / numPunters) + ((numRivers % numPunters) > punterId ? 1 : 0);
-        for (int moveNum = 0; moveNum < ownMoves; moveNum++) {
-            Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
-            moveRequest.getMove().moves.forEach(state::applyMove);
-            River claim = solver.getNextMove(state);
-            Move move = (claim == null) ? Move.pass(state.getMyPunterId())
-                                        : Move.claim(state.getMyPunterId(), claim);
-            writeJson(out, move);
-            state.applyMove(move);
-            LOG.info("sent move: {}", objectMapper.writeValueAsString(move));
-        }
-
-        LOG.info("Receiving scoring info...");
-        Scoring.Data scoring = readJson(in, Scoring.class).stop;
-        scoring.moves.forEach(state::applyMove);
-        LOG.info("number of own rivers: {}", state.getOwnRivers().size());
-        int myScore = scoring.scores.stream().filter(score -> score.punter == punterId).findFirst().get().score;
-        int rank = numPunters - (int) scoring.scores.stream().filter(score -> score.score < myScore).count();
-        LOG.info("RANKING {} / {}", rank, numPunters);
-        scoring.scores.forEach(score -> {
-            int computed = state.getScore(score.punter);
-            if (score.score != computed) {
-                LOG.warn("score mismatch. Server: {}, computed: {}", score.score, computed);
+        try (PrintWriter record = new PrintWriter(new FileWriter("record.json"))) {
+            record.println("{");
+            // 0. Handshake
+            LOG.info("Starting Handshake...");
+            Handshake.Request request = new Handshake.Request("A Storm of Minds");
+            writeJson(out, request);
+            Handshake.Response response = readJson(in, Handshake.Response.class);
+            if (!response.getYou().equals(request.getMe())) {
+                throw new ProtocolException("Handshake: Name did not match [request: '" + request.getMe() + "', response: '" + response.getYou() + "']");
             }
-        });
-        return scoring;
+            LOG.info("Handshake completed");
+
+            // 1. Setup
+            LOG.info("Receiving setup...");
+            Setup.Request setup = readJson(in, Setup.Request.class);
+            GameState state = new GameState(setup);
+            Setup.Response setupResponse = new Setup.Response(setup.getPunter());
+            if (setup.getSettings().getFutures()) {
+                setupResponse.setFutures(solver.getFutures(state));
+            }
+            writeJson(out, setupResponse);
+            LOG.info("Sent ready message: {}", objectMapper.writeValueAsString(setupResponse));
+            LOG.info("Punter id: {}", setup.getPunter());
+            LOG.info("Number of punters: {}", setup.getPunters());
+            LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
+            record.println("\"setup\":");
+            record.println(objectMapper.writeValueAsString(setup));
+
+            // 2. Gameplay
+            record.println(", \"moves\": [");
+            int numRivers = setup.getMap().getRivers().size();
+            int numPunters = setup.getPunters();
+            int punterId = setup.getPunter();
+            int ownMoves = (numRivers / numPunters) + ((numRivers % numPunters) > punterId ? 1 : 0);
+            for (int moveNum = 0; moveNum < ownMoves; moveNum++) {
+                Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
+                moveRequest.getMove().moves.forEach(state::applyMove);
+                for (Move move : moveRequest.getMove().moves) {
+                    if (move.isClaim()) {
+                        Move.ClaimData claim = move.getClaim();
+                        record.println(objectMapper.writeValueAsString(claim));
+                    }
+                }
+                River claim = solver.getNextMove(state);
+                Move move = (claim == null) ? Move.pass(state.getMyPunterId())
+                        : Move.claim(state.getMyPunterId(), claim);
+                writeJson(out, move);
+                state.applyMove(move);
+                LOG.info("sent move: {}", objectMapper.writeValueAsString(move));
+            }
+
+            LOG.info("Receiving scoring info...");
+            Scoring.Data scoring = readJson(in, Scoring.class).stop;
+            scoring.moves.forEach(state::applyMove);
+            LOG.info("number of own rivers: {}", state.getOwnRivers().size());
+            int myScore = scoring.scores.stream().filter(score -> score.punter == punterId).findFirst().get().score;
+            int rank = numPunters - (int) scoring.scores.stream().filter(score -> score.score < myScore).count();
+            LOG.info("RANKING {} / {}", rank, numPunters);
+            scoring.scores.forEach(score -> {
+                int computed = state.getScore(score.punter);
+                if (score.score != computed) {
+                    LOG.warn("score mismatch. Server: {}, computed: {}", score.score, computed);
+                }
+            });
+            // our last move is missing from record. Should be no problem
+            record.println("]}");
+            return scoring;
+        }
     }
 
     private void runOfflineMove(InputStream in, PrintStream out) throws IOException {
