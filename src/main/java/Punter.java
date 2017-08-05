@@ -125,6 +125,12 @@ public class Punter {
                         : Move.claim(state.getMyPunterId(), claim);
                 writeJson(out, move);
                 state.applyMove(move);
+                if (move.isClaim()) {
+                    Move.ClaimData claim1 = move.getClaim();
+                    record.print(recordSep);
+                    recordSep = ',';
+                    record.println(objectMapper.writeValueAsString(claim1));
+                }
                 LOG.info("sent move: {}", objectMapper.writeValueAsString(move));
             }
 
@@ -141,7 +147,6 @@ public class Punter {
                     LOG.warn("score mismatch. Server: {}, computed: {}", score.score, computed);
                 }
             });
-            // our last move is missing from record. Should be no problem
             record.println("]}");
             return scoring;
         }
