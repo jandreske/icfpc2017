@@ -91,6 +91,7 @@ function drawRiver(c, river) {
         c.fillStyle = PUNTER_COLORS[river.owner];
         c.strokeStyle = PUNTER_COLORS[river.owner];
     }
+    c.lineWidth = 4;
     c.beginPath();
     var site = get_site(river.source);
     var x = translate_x(site.x);
