@@ -1,5 +1,6 @@
 package solvers;
 
+import io.Future;
 import io.Gameplay;
 import io.Move;
 import io.River;
@@ -12,4 +13,5 @@ public interface Solver {
      */
     River getNextMove(GameState state);
 
+    Future[] getFutures(GameState state);
 }

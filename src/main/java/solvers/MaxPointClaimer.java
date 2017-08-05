@@ -1,5 +1,6 @@
 package solvers;
 
+import io.Future;
 import io.River;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,11 @@ public class MaxPointClaimer implements Solver {
         }
 
         return best;
+    }
+
+    @Override
+    public Future[] getFutures(GameState state) {
+        return new Future[0];
     }
 
 }

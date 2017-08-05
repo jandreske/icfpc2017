@@ -13,6 +13,8 @@ public class Setup {
 
         private Map map;
 
+        private Settings settings;
+
         public int getPunter() {
             return punter;
         }
@@ -23,6 +25,10 @@ public class Setup {
 
         public Map getMap() {
             return map;
+        }
+
+        public Settings getSettings() {
+            return settings;
         }
 
         public void setPunters(int punters) {
@@ -36,6 +42,10 @@ public class Setup {
         public void setMap(Map map) {
             this.map = map;
         }
+
+        public void setSettings(Settings settings) {
+            this.settings = settings;
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -44,6 +54,8 @@ public class Setup {
         private int ready;
 
         private GameState state = null;
+
+        private Future[] futures;
 
         public Response(int myId) {
             ready = myId;
@@ -57,8 +69,16 @@ public class Setup {
             return state;
         }
 
+        public Future[] getFutures() {
+            return futures;
+        }
+
         public void setState(GameState state) {
             this.state = state;
+        }
+
+        public void setFutures(Future[] futures) {
+            this.futures = futures;
         }
     }
 

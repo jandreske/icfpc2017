@@ -1,5 +1,6 @@
 package solvers;
 
+import io.Future;
 import io.River;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +76,11 @@ public class ExpandingMineClaimer implements Solver {
 
         if (best != null) return best;
         return freeRivers.iterator().next();
+    }
+
+    @Override
+    public Future[] getFutures(GameState state) {
+        return new Future[]{new Future(1, 6)};
     }
 
 }

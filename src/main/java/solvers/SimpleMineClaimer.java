@@ -1,5 +1,6 @@
 package solvers;
 
+import io.Future;
 import io.River;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,5 +31,10 @@ public class SimpleMineClaimer implements Solver {
 
         LOG.error("No free rivers available");
         return null;
+    }
+
+    @Override
+    public Future[] getFutures(GameState state) {
+        return new Future[0];
     }
 }

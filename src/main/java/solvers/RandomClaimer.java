@@ -28,4 +28,9 @@ public class RandomClaimer implements Solver {
         return null;
     }
 
+    @Override
+    public Future[] getFutures(GameState state) {
+        return new Future[0];
+    }
+
 }

@@ -88,14 +88,18 @@ public class Punter {
         // 1. Setup
         LOG.info("Receiving setup...");
         Setup.Request setup = readJson(in, Setup.Request.class);
+        GameState state = new GameState(setup);
         Setup.Response setupResponse = new Setup.Response(setup.getPunter());
+        if (setup.getSettings().getFutures()) {
+            setupResponse.setFutures(solver.getFutures(state));
+        }
         writeJson(out, setupResponse);
+        LOG.info("Sent ready message: {}", objectMapper.writeValueAsString(setupResponse));
         LOG.info("Punter id: {}", setup.getPunter());
         LOG.info("Number of punters: {}", setup.getPunters());
         LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
 
         // 2. Gameplay
-        GameState state = new GameState(setup);
         int numRivers = setup.getMap().getRivers().size();
         int numPunters = setup.getPunters();
         int punterId = setup.getPunter();
@@ -147,6 +151,9 @@ public class Punter {
             GameState state = new GameState(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
             setupResponse.setState(state);
+            if (setup.getSettings().getFutures()) {
+                setupResponse.setFutures(solver.getFutures(state));
+            }
             writeJson(out, setupResponse);
             LOG.info("Punter id: {}", setup.getPunter());
             LOG.info("Number of punters: {}", setup.getPunters());
