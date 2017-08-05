@@ -51,11 +51,11 @@ function loadGame(f) {
             if (site.y < min_y) min_y = site.y;
             if (site.y > max_y) max_y = site.y;
         });
-        xoff = min_x - 25;
-        yoff = min_y - 25;
         var dx = max_x - min_x;
         var dy = max_y - min_y;
         scale = size / Math.max(dx, dy);
+        xoff = scale * min_x - 25;
+        yoff = scale * min_y - 25;
         drawMap();
         nextMove = 0;
     };
