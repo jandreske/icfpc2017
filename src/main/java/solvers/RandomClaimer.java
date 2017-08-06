@@ -13,16 +13,18 @@ public class RandomClaimer implements Solver {
     private static final Logger LOG = LoggerFactory.getLogger(RandomClaimer.class);
 
     private final Random random = new Random();
+    private Move bestChoice;
 
     @Override
-    public River getNextMove(GameState state) {
+    public Move getNextMove(GameState state) {
+        bestChoice = Move.pass(state.getMyPunterId());
         Set<River> rivers = state.getUnclaimedRivers();
         int numRivers = rivers.size();
         int item = random.nextInt(numRivers);
         int i = 0;
         for (River river : rivers) {
             if (i == item) {
-                return river;
+                return Move.claim(state.getMyPunterId(), river);
             }
             i++;
         }
@@ -41,8 +43,8 @@ public class RandomClaimer implements Solver {
     }
 
     @Override
-    public River getBestChoice() {
-        return null;
+    public Move getBestChoice() {
+        return bestChoice;
     }
 
 }

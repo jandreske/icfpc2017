@@ -1,22 +1,20 @@
 package solvers;
 
 import io.Future;
+import io.Move;
 import io.River;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import state.GameState;
 
 import java.util.Set;
 
 public class MaxPointClaimer implements Solver {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MaxPointClaimer.class);
-    private River bestChoice = null;
+    private Move bestChoice = null;
 
     @Override
-    public River getNextMove(GameState state) {
+    public Move getNextMove(GameState state) {
         Set<River> freeRivers = state.getUnclaimedRivers();
-        setBestChoice(freeRivers.iterator().next());
+        setBestChoice(Move.claim(state.getMyPunterId(), freeRivers.iterator().next()));
 
         River best = null;
         int bestPoints = 0;
@@ -27,11 +25,11 @@ public class MaxPointClaimer implements Solver {
             if (best == null || points > bestPoints) {
                 best = river;
                 bestPoints = points;
-                setBestChoice(river);
+                setBestChoice(Move.claim(state.getMyPunterId(), river));
             }
         }
 
-        return best;
+        return Move.claim(state.getMyPunterId(), best);
     }
 
     @Override
@@ -45,12 +43,12 @@ public class MaxPointClaimer implements Solver {
     }
 
     @Override
-    public synchronized River getBestChoice() {
+    public synchronized Move getBestChoice() {
         return bestChoice;
     }
 
-    private synchronized void setBestChoice(River river) {
-        this.bestChoice = river;
+    private synchronized void setBestChoice(Move move) {
+        this.bestChoice = move;
     }
 
 }

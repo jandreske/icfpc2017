@@ -1,6 +1,7 @@
 package solvers;
 
 import io.Future;
+import io.Move;
 import io.River;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,35 +13,35 @@ import java.util.Set;
 
 public class SplurgeFly implements Solver {
 
-    private River bestChoice = null;
+    private Move bestChoice = null;
 
     private static final Logger LOG = LoggerFactory.getLogger(SplurgeFly.class);
 
 
     @Override
-    public River getNextMove(GameState state) {
+    public Move getNextMove(GameState state) {
         Set<Integer> mines = state.getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
-        setBestChoice(state.getUnclaimedRivers().iterator().next());
+        setBestChoice(Move.claim(state.getMyPunterId(), state.getUnclaimedRivers().iterator().next()));
 
-        //if there is just one mine, and we have less than 10 connections, grab one
-        River river = getSingleMineRiver(state, mines);
-        if (river != null) return river;
-
-        //if we have an unfulfilled future that is still possible to fulfill, get the next step for that
-        river = getNextFutureStep(state);
-        if (river != null) return river;
-
-        //if we can connect two mines which are not yet connected, work on that
-        river = getMineConnectionStep(state, mines);
-        if (river != null) return river;
-
-        //if we have no other idea, get the one which gives the most points
-        river = getMaxPoints(state, mines, freeRivers);
-        if (river != null) return river;
+//        //if there is just one mine, and we have less than 10 connections, grab one
+//        River river = getSingleMineRiver(state, mines);
+//        if (river != null) return river;
+//
+//        //if we have an unfulfilled future that is still possible to fulfill, get the next step for that
+//        river = getNextFutureStep(state);
+//        if (river != null) return river;
+//
+//        //if we can connect two mines which are not yet connected, work on that
+//        river = getMineConnectionStep(state, mines);
+//        if (river != null) return river;
+//
+//        //if we have no other idea, get the one which gives the most points
+//        river = getMaxPoints(state, mines, freeRivers);
+//        if (river != null) return river;
 
         // if nothing even gices points, just take something (to hurt other players)
-        return freeRivers.iterator().next();
+        return Move.claim(state.getMyPunterId(), freeRivers.iterator().next());
     }
 
     private River getMaxPoints(GameState state, Set<Integer> mines, Set<River> freeRivers) {
@@ -67,7 +68,7 @@ public class SplurgeFly implements Solver {
             if (best == null || points > bestPoints) {
                 best = river;
                 bestPoints = points;
-                setBestChoice(river);
+                setBestChoice(Move.claim(state.getMyPunterId(), river));
             }
         }
         return best;
@@ -192,12 +193,12 @@ public class SplurgeFly implements Solver {
     }
 
     @Override
-    public synchronized River getBestChoice() {
+    public synchronized Move getBestChoice() {
         return bestChoice;
     }
 
-    private synchronized void setBestChoice(River river) {
-        bestChoice = river;
+    private synchronized void setBestChoice(Move move) {
+        bestChoice = move;
     }
 
     private int getRisk(GameState state) {

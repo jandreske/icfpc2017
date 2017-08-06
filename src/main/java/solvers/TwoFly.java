@@ -1,6 +1,7 @@
 package solvers;
 
 import io.Future;
+import io.Move;
 import io.River;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 public class TwoFly implements Solver {
-    private River bestChoice = null;
+    private Move bestChoice = null;
     private final int risk;
     private final int stepDivider;
 
@@ -22,9 +23,9 @@ public class TwoFly implements Solver {
     }
 
     @Override
-    public River getNextMove(GameState state) {
+    public Move getNextMove(GameState state) {
         Set<River> freeRivers = state.getUnclaimedRivers();
-        setBestChoice(state.getUnclaimedRivers().iterator().next());
+        setBestChoice(Move.claim(state.getMyPunterId(), state.getUnclaimedRivers().iterator().next()));
         Future bestFuture = null;
         int shortest = Integer.MAX_VALUE;
         if (state.getFutures() != null) {
@@ -37,7 +38,7 @@ public class TwoFly implements Solver {
                     bestFuture = future;
                 }
             }
-            if (bestFuture != null) return state.nextStepForFuture(bestFuture);
+            if (bestFuture != null) return Move.claim(state.getMyPunterId(), state.nextStepForFuture(bestFuture));
         }
 
         Set<Integer> mines = state.getMines();
@@ -46,7 +47,7 @@ public class TwoFly implements Solver {
             if (state.getOwnRiversTouching(mine).size() < 10) {
                 Set<River> rivers = state.getUnclaimedRiversTouching(mine);
                 if (!rivers.isEmpty()) {
-                    return rivers.iterator().next();
+                    return Move.claim(state.getMyPunterId(), rivers.iterator().next());
                 }
             }
         }
@@ -70,7 +71,7 @@ public class TwoFly implements Solver {
         if (bestPath != null) {
             for (River river : bestPath) {
                 if (!river.isClaimed()) {
-                    return river;
+                    return Move.claim(state.getMyPunterId(), river);
                 }
             }
         }
@@ -91,7 +92,7 @@ public class TwoFly implements Solver {
                 // both sides touch one of ours - if they are already connected, ignore
                 if (state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) continue;
                 //otherwise, take this one - to connect subgraphs
-                return river;
+                return Move.claim(state.getMyPunterId(), river);
             }
 
             //only one side is connected, we consider this one
@@ -99,12 +100,12 @@ public class TwoFly implements Solver {
             if (best == null || points > bestPoints) {
                 best = river;
                 bestPoints = points;
-                setBestChoice(river);
+                setBestChoice(Move.claim(state.getMyPunterId(), river));
             }
         }
 
-        if (best != null) return best;
-        return freeRivers.iterator().next();
+        if (best != null) return Move.claim(state.getMyPunterId(), best);
+        return Move.claim(state.getMyPunterId(), freeRivers.iterator().next());
     }
 
     @Override
@@ -166,11 +167,11 @@ public class TwoFly implements Solver {
     }
 
     @Override
-    public synchronized River getBestChoice() {
+    public synchronized Move getBestChoice() {
         return bestChoice;
     }
 
-    private synchronized void setBestChoice(River river) {
-        bestChoice = river;
+    private synchronized void setBestChoice(Move move) {
+        bestChoice = move;
     }
 }

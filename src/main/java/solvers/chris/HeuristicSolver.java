@@ -3,6 +3,7 @@ package solvers.chris;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.Future;
+import io.Move;
 import io.River;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ public class HeuristicSolver implements Solver {
 
     private GameState state;
 
-    private River bestMoveSoFar;
+    private Move bestMoveSoFar;
     private RiverValue bestMoveValue;
 
     private final Multimap<RiverValue, River> candidates = HashMultimap.create();
@@ -38,7 +39,7 @@ public class HeuristicSolver implements Solver {
         synchronized (candidates) {
             if (bestMoveValue == null || value.compareTo(bestMoveValue) < 0) {
                 bestMoveValue = value;
-                bestMoveSoFar = candidate;
+                bestMoveSoFar = Move.claim(state.getMyPunterId(), candidate);
             }
             candidates.put(value, candidate);
         }
@@ -88,14 +89,14 @@ public class HeuristicSolver implements Solver {
     }
 
     @Override
-    public River getNextMove(GameState state) {
+    public Move getNextMove(GameState state) {
         reset(state);
         classifyUnclaimedRivers();
         RiverValue bestValue = getBestValue();
         if (bestValue != null) {
             LOG.info("found cadidate of value {}", bestValue);
             Collection<River> choices = candidates.get(bestValue);
-            return chooseByDegree(bestValue, choices);
+            return Move.claim(state.getMyPunterId(), chooseByDegree(bestValue, choices));
         }
         LOG.info("falling back to random");
         return randomClaimer.getNextMove(state);
@@ -147,7 +148,7 @@ public class HeuristicSolver implements Solver {
     }
 
     @Override
-    public River getBestChoice() {
+    public Move getBestChoice() {
         synchronized (candidates) {
             return bestMoveSoFar;
         }

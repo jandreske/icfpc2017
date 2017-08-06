@@ -1,34 +1,32 @@
 package solvers;
 
 import io.Future;
+import io.Move;
 import io.River;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import state.GameState;
 
 import java.util.Set;
 
 public class SimpleMineClaimer implements Solver {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleMineClaimer.class);
 
-    private River bestChoice = null;
+    private Move bestChoice = null;
 
     @Override
-    public River getNextMove(GameState state) {
+    public Move getNextMove(GameState state) {
         Set<Integer> mines = state.getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
-        setBestChoice(freeRivers.iterator().next());
+        setBestChoice(Move.claim(state.getMyPunterId(), freeRivers.iterator().next()));
         for (Integer mine : mines) {
             Set<River> mineRivers = state.getRiversTouching(mine);
             for (River mineRiver : mineRivers) {
                 if (freeRivers.contains(mineRiver)) {
-                    return mineRiver;
+                    return Move.claim(state.getMyPunterId(), mineRiver);
                 }
             }
         }
 
-        return freeRivers.iterator().next();
+        return Move.claim(state.getMyPunterId(), freeRivers.iterator().next());
     }
 
     @Override
@@ -42,11 +40,11 @@ public class SimpleMineClaimer implements Solver {
     }
 
     @Override
-    public synchronized River getBestChoice() {
+    public synchronized Move getBestChoice() {
         return bestChoice;
     }
 
-    private synchronized void setBestChoice(River river) {
-        this.bestChoice = river;
+    private synchronized void setBestChoice(Move move) {
+        this.bestChoice = move;
     }
 }

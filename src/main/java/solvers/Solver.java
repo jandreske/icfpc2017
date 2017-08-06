@@ -8,14 +8,11 @@ import state.GameState;
 
 public interface Solver {
 
-    /**
-     * Return next river to claim or {@code null} to pass.
-     */
-    River getNextMove(GameState state);
+    Move getNextMove(GameState state);
 
     Future[] getFutures(GameState state);
 
     String getName();
 
-    River getBestChoice();
+    Move getBestChoice();
 }

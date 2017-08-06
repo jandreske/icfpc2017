@@ -47,6 +47,10 @@ public class Punter {
             case "twofly4-2":     return new TwoFly(4, 2);
             case "twofly4-3":     return new TwoFly(4, 3);
             case "twofly4-4":     return new TwoFly(4, 4);
+            case "twofly-1-2":    return new TwoFly(-1, 2);
+            case "twofly-1-3":    return new TwoFly(-1, 3);
+            case "twofly-1-4":    return new TwoFly(-1, 4);
+            case "twofly5-3":     return new TwoFly(5, 3);
             default:            return new MineConnectClaimer();
         }
     }
@@ -176,10 +180,7 @@ public class Punter {
                     }
                 }
 
-                River claim = getNextMoveWithTimeout(state, TIME_OUT_MS);
-
-                Move move = (claim == null) ? Move.pass(state.getMyPunterId())
-                        : Move.claim(state.getMyPunterId(), claim);
+                Move move = getNextMoveWithTimeout(state, TIME_OUT_MS);
                 writeJson(out, move);
                 state.applyMove(move);
                 Move.ClaimData claim1 = move.getClaim();
@@ -210,8 +211,8 @@ public class Punter {
         }
     }
 
-    private River getNextMoveWithTimeout(GameState state, int timeOutMs) {
-        java.util.concurrent.Future<River> future = timeoutExecutorService.submit(() -> solver.getNextMove(state));
+    private Move getNextMoveWithTimeout(GameState state, int timeOutMs) {
+        java.util.concurrent.Future<Move> future = timeoutExecutorService.submit(() -> solver.getNextMove(state));
         try {
             return future.get(timeOutMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -221,7 +222,7 @@ public class Punter {
         } catch (ExecutionException e) {
             //error happened while executing
             LOG.error("Unexpected exception", e);
-            return null;
+            return Move.pass(state.getMyPunterId());
         } catch (TimeoutException e) {
             LOG.warn("Timeout, taking best option so far");
             future.cancel(true);
@@ -265,9 +266,7 @@ public class Punter {
                 throw new ProtocolException("state not supplied in offline mode");
             }
             moveRequest.getMove().moves.forEach(state::applyMove);
-            River claim = getNextMoveWithTimeout(state, TIME_OUT_MS);
-            Move move = (claim == null) ? Move.pass(state.getMyPunterId())
-                    : Move.claim(state.getMyPunterId(), claim);
+            Move move = getNextMoveWithTimeout(state, TIME_OUT_MS);
             move.setState(state);
             writeJson(out, move);
             LOG.info("Move and new state: {}", move);

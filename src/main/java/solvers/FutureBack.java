@@ -1,7 +1,7 @@
 package solvers;
 
 import io.Future;
-import io.River;
+import io.Move;
 import state.GameState;
 
 import java.util.HashSet;
@@ -10,7 +10,7 @@ import java.util.Set;
 public class FutureBack implements Solver {
 
     private Solver connector = new MineConnectClaimer();
-    private River bestChoice = null;
+    private Move bestChoice = null;
     private final int risk;
 
     public FutureBack(int riskLevel) {
@@ -18,8 +18,8 @@ public class FutureBack implements Solver {
     }
 
     @Override
-    public River getNextMove(GameState state) {
-        setBestChoice(state.getUnclaimedRivers().iterator().next());
+    public Move getNextMove(GameState state) {
+        setBestChoice(Move.claim(state.getMyPunterId(), state.getUnclaimedRivers().iterator().next()));
         Future best = null;
         int shortest = Integer.MAX_VALUE;
         if (state.getFutures() != null) {
@@ -32,7 +32,7 @@ public class FutureBack implements Solver {
                     best = future;
                 }
             }
-            if (best != null) return state.nextStepForFuture(best);
+            if (best != null) return Move.claim(state.getMyPunterId(), state.nextStepForFuture(best));
         }
 
         setBestChoice(null);
@@ -66,11 +66,11 @@ public class FutureBack implements Solver {
     }
 
     @Override
-    public synchronized River getBestChoice() {
+    public synchronized Move getBestChoice() {
         return bestChoice == null ? connector.getBestChoice() : bestChoice;
     }
 
-    private synchronized void setBestChoice(River river) {
-        bestChoice = river;
+    private synchronized void setBestChoice(Move move) {
+        bestChoice = move;
     }
 }
