@@ -6,19 +6,26 @@ import java.util.*;
 
 public class Bfs {
 
+    private static final River SENTINEL = new River(-1,-1);
+
+    private final int maxVertex;
     private final Set<Integer> vertices;
-    private final Set<River> edges;
 
-    private final Map<Integer, List<River>> edgesByVertex;
+    private final ArrayNatMap<List<River>> edgesByVertex;
 
-    public Bfs(Iterable<River> edges) {
-        this.edges = new HashSet<>(200);
-        vertices = new HashSet<>(200);
-        edgesByVertex = new HashMap<>(200);
+    public Bfs(Collection<River> edges) {
+        int n = edges.size();
+        vertices = new HashSet<>(n);
+        int maxId = -1;
         for (River e : edges) {
-            this.edges.add(e);
             vertices.add(e.getSource());
             vertices.add(e.getTarget());
+            if (e.getSource() > maxId) maxId = e.getSource();
+            if (e.getTarget() > maxId) maxId = e.getTarget();
+        }
+        maxVertex = maxId;
+        edgesByVertex = new ArrayNatMap<>(maxId + 1);
+        for (River e : edges) {
             addEdge(e.getSource(), e);
             addEdge(e.getTarget(), e);
         }
@@ -34,10 +41,6 @@ public class Bfs {
         es.add(edge);
     }
 
-    public int size() {
-        return edges.size();
-    }
-
     public List<River> getShortestPath(int source, int target) {
         if (source == target) {
             return Collections.emptyList();
@@ -46,9 +49,11 @@ public class Bfs {
             return null;
         }
 
-        Map<Integer, River> visited = new HashMap<>(edges.size());
-        LinkedList<Integer> queue = new LinkedList<>();
-        visited.put(source, null);
+        ArrayNatMap<River> visited = new ArrayNatMap<>(maxVertex + 1);
+        // Map<Integer, River> visited = new HashMap<>();
+        IntQueue queue = new IntQueue(24);
+        // LinkedList<Integer> queue = new LinkedList<>();
+        visited.put(source, SENTINEL);
         queue.addLast(source);
         while (!queue.isEmpty()) {
             int node = queue.removeFirst();
@@ -71,11 +76,23 @@ public class Bfs {
         return null;
     }
 
+    private List<River> extractPath(ArrayNatMap<River> visited, int node) {
+        LinkedList<River> path = new LinkedList<>();
+        for (;;) {
+            River entry = visited.get(node);
+            if (entry == SENTINEL) {
+                return path;
+            }
+            path.addFirst(entry);
+            node = entry.getOpposite(node);
+        }
+    }
+
     private List<River> extractPath(Map<Integer, River> visited, int node) {
         LinkedList<River> path = new LinkedList<>();
         for (;;) {
             River entry = visited.get(node);
-            if (entry == null) {
+            if (entry == SENTINEL) {
                 return path;
             }
             path.addFirst(entry);

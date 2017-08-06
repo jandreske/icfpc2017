@@ -2,6 +2,7 @@ package state;
 
 import io.River;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -9,7 +10,7 @@ class GraphMap {
 
     private final Bfs bfs;
 
-    GraphMap(Iterable<Integer> sites, Iterable<River> rivers) {
+    GraphMap(Iterable<Integer> sites, Collection<River> rivers) {
         bfs = new Bfs(rivers);
     }
 
