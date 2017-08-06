@@ -24,6 +24,7 @@ class MapBasedGameState implements GameState {
     private final java.util.Map<Integer, Integer> credits = new HashMap<>();
 
     private GraphMap graphMap;
+    private GraphMap[] graphMapByPunter = null;
     private Future[] futures;
     private Settings settings;
 
@@ -41,12 +42,30 @@ class MapBasedGameState implements GameState {
         graphMap = null;
     }
 
+    @Override
+    public Settings getSettings() {
+        if (settings == null) {
+            settings = new Settings();
+        }
+        return settings;
+    }
+
     @Transient
     private GraphMap getGraphMap() {
         if (graphMap == null) {
             graphMap = new GraphMap(getSites(), getRivers());
         }
         return graphMap;
+    }
+
+    private GraphMap getGraphMap(int punter) {
+        if (graphMapByPunter == null) {
+            graphMapByPunter = new GraphMap[getNumPunters()];
+        }
+        if (graphMapByPunter[punter] == null) {
+            graphMapByPunter[punter] = new GraphMap(getSites(), getRiversByOwner(punter));
+        }
+        return graphMapByPunter[punter];
     }
 
     @Override
@@ -131,6 +150,15 @@ class MapBasedGameState implements GameState {
                 .findAny();
     }
 
+    private void invalidateCaches(int punter) {
+        if (punter == getMyPunterId()) {
+            score = -1;
+        }
+        if (graphMapByPunter != null) {
+            graphMapByPunter[punter] = null;
+        }
+    }
+
     /**
      * Update game state with move.
      * @return {@code true} if a new river was claimed,
@@ -141,13 +169,11 @@ class MapBasedGameState implements GameState {
         Move.ClaimData claim = move.getClaim();
         if (claim != null) {
             River river = getRiver(claim.source, claim.target).get();
-            //TODO can this stay?
-            if (river.isClaimed() && claim.punter != myPunterId) {
+            if (river.isClaimed()) {
                 throw new LogicException("river " + river + " claimed by " + claim.punter + " but already owned by " + river.getOwner());
             }
             river.setOwner(claim.punter);
-            //reset score cache
-            if (claim.punter == myPunterId) score = -1;
+            invalidateCaches(claim.punter);
             return true;
         }
         Move.SplurgeData splurge = move.getSplurge();
@@ -164,8 +190,7 @@ class MapBasedGameState implements GameState {
                 cred--;
             }
             credits.put(punter, cred);
-            //reset score cache
-            if (splurge.punter == myPunterId) score = -1;
+            invalidateCaches(splurge.punter);
             return true;
         }
         Move.PassData pass = move.getPass();
@@ -184,20 +209,20 @@ class MapBasedGameState implements GameState {
      */
     @Override
     public boolean canReach(int punter, int site1, int site2) {
-        GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
+        GraphMap punterMap = getGraphMap(punter);
         return punterMap.hasRoute(site1, site2);
     }
 
     @Override
     public boolean canReachMine(int punter, int site) {
-        GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
+        GraphMap punterMap = getGraphMap(punter);
         return getMines().stream()
                 .anyMatch(mine -> punterMap.hasRoute(site, mine));
     }
 
     @Override
     public int getScore(int punter) {
-        GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
+        GraphMap punterMap = getGraphMap(punter);
         return getMines().stream()
                 .mapToInt(mine -> getScore(punterMap, mine))
                 .sum();
@@ -235,8 +260,9 @@ class MapBasedGameState implements GameState {
 
     @Override
     public List<River> getShortestOpenRoute(int punterId, int site1, int site2) {
-        Set<River> rivers = getRiversByOwner(punterId);
-        rivers.addAll(getUnclaimedRivers());
+        Set<River> rivers = getRivers().stream()
+                .filter(r -> r.getOwner() == punterId || !r.isClaimed())
+                .collect(Collectors.toSet());
         GraphMap punterMap = new GraphMap(getSites(), rivers);
         return punterMap.getShortestRoute(site1, site2);
     }
@@ -245,7 +271,7 @@ class MapBasedGameState implements GameState {
     public int getPotentialPoints(River river) {
         if (river.isClaimed()) return 0;
         //if we did not calculate score since last own move, do it now
-        if (score == -1) {
+        if (score < 0) {
             score = getScore(myPunterId);
         }
         Set<River> rivers = getRiversByOwner(myPunterId);

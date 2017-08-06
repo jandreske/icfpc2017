@@ -1,9 +1,6 @@
 package state;
 
-import io.Future;
-import io.Map;
-import io.Move;
-import io.River;
+import io.*;
 
 import java.beans.Transient;
 import java.util.List;
@@ -125,6 +122,8 @@ public interface GameState {
 
     /** Get the set of site IDs that are mines. */
     Set<Integer> getMines();
+
+    Settings getSettings();
 
     void setFutures(Future[] futures);
 
