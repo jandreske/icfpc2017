@@ -328,12 +328,12 @@ class MapBasedGameState implements GameState {
 
     @Override
     public boolean areFuturesActive() {
-        return settings.getFutures();
+        return (settings != null && settings.getFutures());
     }
 
     @Override
     public boolean areSplurgesActive() {
-        return settings.isSplurges();
+        return (settings != null && settings.isSplurges());
     }
 
     @Override

@@ -1,7 +1,6 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleAbstractTypeResolver;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -195,6 +194,8 @@ public class Punter {
             LOG.info("Punter id: {}", setup.getPunter());
             LOG.info("Number of punters: {}", setup.getPunters());
             //LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
+            LOG.info("STATS: {} sites, {} rivers, {} mines", setup.getMap().getSites().size(),
+                    setup.getMap().getRivers().size(), setup.getMap().getMines().size());
             record.println("\"setup\":");
             record.println(objectMapper.writeValueAsString(setup));
 

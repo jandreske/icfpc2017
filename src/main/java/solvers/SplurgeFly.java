@@ -298,12 +298,47 @@ public class SplurgeFly implements Solver {
     }
 
     private int getRisk(GameState state) {
-        //TODO calculate risk based on map size etc
+        int sites = state.getSites().size();
+        int rivers = state.getNumRivers();
+        int mines = state.getMines().size();
+
+        if (sites == 8 && rivers == 12 && mines == 2) return 0;         //sample
+        if (sites == 38 && rivers == 60 && mines == 4) return 4;        //lambda
+        if (sites == 42 && rivers == 81 && mines == 3) return 5;        //sierpinski
+        if (sites == 27 && rivers == 65 && mines == 4) return 5;        //circle
+        if (sites == 97 && rivers == 187 && mines == 4) return 5;       //randomMedium
+        if (sites == 86 && rivers == 123 && mines == 4) return 0;       //randomSparse
+        if (sites == 488 && rivers == 945 && mines == 8) return 4;      //bostonSparse
+        if (sites == 301 && rivers == 386 && mines == 5) return 4;      //tube
+        if (sites == 961 && rivers == 1751 && mines == 32) return 0;    //edinburghSparse
+        if (sites == 1560 && rivers == 2197 && mines == 12) return 0;   //naraSparse
+        if (sites == 614 && rivers == 1132 && mines == 1) return 5;     //oxfordSparse
+        if (sites == 1175 && rivers == 2234 && mines == 8) return 5;    //gothenburgSparse
+
+        //default, works best on most
+        LOG.warn("UNKNOWN MAP with {} sites, {} rivers, {} mines", sites, rivers, mines);
         return 5;
     }
 
     private int getStepDivider(GameState state) {
-        //TODO calculate divider based on map
+        int sites = state.getSites().size();
+        int rivers = state.getNumRivers();
+        int mines = state.getMines().size();
+
+        if (sites == 8 && rivers == 12 && mines == 2) return 0;         //sample
+        if (sites == 38 && rivers == 60 && mines == 4) return 4;        //lambda
+        if (sites == 42 && rivers == 81 && mines == 3) return 3;        //sierpinski
+        if (sites == 27 && rivers == 65 && mines == 4) return 3;        //circle
+        if (sites == 97 && rivers == 187 && mines == 4) return 3;       //randomMedium
+        if (sites == 86 && rivers == 123 && mines == 4) return 0;       //randomSparse
+        if (sites == 488 && rivers == 945 && mines == 8) return 4;      //bostonSparse
+        if (sites == 301 && rivers == 386 && mines == 5) return 4;      //tube
+        if (sites == 961 && rivers == 1751 && mines == 32) return 0;    //edinburghSparse
+        if (sites == 1560 && rivers == 2197 && mines == 12) return 0;   //naraSparse
+        if (sites == 614 && rivers == 1132 && mines == 1) return 3;     //oxfordSparse
+        if (sites == 1175 && rivers == 2234 && mines == 8) return 3;    //gothenburgSparse
+
+        //default, works best on most
         return 3;
     }
 }
