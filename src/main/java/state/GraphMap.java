@@ -4,6 +4,7 @@ import io.River;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.AStarShortestPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.SimpleGraph;
 
 import java.util.Collections;
@@ -20,7 +21,8 @@ class GraphMap {
         sites.forEach(site -> g.addVertex(site));
         rivers.forEach(river -> g.addEdge(river.getSource(), river.getTarget(), river));
 
-        spa = new AStarShortestPath<>(g, (v,t) -> (v == t) ? 0 : 1);
+        // spa = new AStarShortestPath<>(g, (v,t) -> (v == t) ? 0 : 1);
+        spa = new DijkstraShortestPath<Integer, River>(g);
     }
 
     /**

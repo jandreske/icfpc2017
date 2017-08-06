@@ -71,7 +71,7 @@ public class River {
         return 31 * source + target;
     }
 
-    public int getOpposite(Integer site) {
+    public int getOpposite(int site) {
         if (site == source) return target;
         if (site == target) return source;
         throw new LogicException("Cannot get opposite from site not touching river");
