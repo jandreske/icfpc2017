@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import state.GameState;
 
 import java.beans.Transient;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Move {
@@ -30,6 +33,11 @@ public class Move {
         }
     }
 
+    public static class SplurgeData {
+        public int punter;
+        public List<Integer> route = new ArrayList<>();
+    }
+
     public static Move claim(int punter, River river) {
         ClaimData claim = new ClaimData();
         claim.punter = punter;
@@ -48,9 +56,19 @@ public class Move {
         return move;
     }
 
+    public static Move splurge(int punter, Collection<Integer> route) {
+        SplurgeData splurge = new SplurgeData();
+        splurge.punter = punter;
+        splurge.route.addAll(route);
+        Move move = new Move();
+        move.splurge = splurge;
+        return move;
+    }
+
 
     private ClaimData claim = null;
     private PassData pass = null;
+    private SplurgeData splurge = null;
     private GameState state = null;
 
     /** Returns null if this move is a pass. */
@@ -61,6 +79,10 @@ public class Move {
     /** Returns null if this move is a claim. */
     public PassData getPass() {
         return pass;
+    }
+
+    public SplurgeData getSplurge() {
+        return splurge;
     }
 
     /** Offline mode only. */

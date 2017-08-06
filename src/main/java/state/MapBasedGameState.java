@@ -139,6 +139,20 @@ class MapBasedGameState implements GameState {
             if (claim.punter == myPunterId) score = -1;
             return true;
         }
+        Move.SplurgeData splurge = move.getSplurge();
+        if (splurge != null) {
+            int n = splurge.route.size();
+            for (int i = 1; i < n; i++) {
+                River river = getRiver(splurge.route.get(i-1), splurge.route.get(i)).get();
+                if (river.isClaimed() && splurge.punter != myPunterId) {
+                    throw new LogicException("river " + river + " claimed by " + claim.punter + " but already owned by " + river.getOwner());
+                }
+                river.setOwner(splurge.punter);
+            }
+            //reset score cache
+            if (splurge.punter == myPunterId) score = -1;
+            return true;
+        }
         return false;
     }
 

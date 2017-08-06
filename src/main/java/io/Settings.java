@@ -4,11 +4,7 @@ public class Settings {
 
     private boolean futures;
 
-    public Settings() {}
-
-    public Settings(boolean futures) {
-        this.futures = futures;
-    }
+    private boolean splurges;
 
     public boolean getFutures() {
         return futures;
@@ -18,18 +14,11 @@ public class Settings {
         this.futures = futures;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Settings other = (Settings) o;
-
-        return futures == other.futures;
+    public boolean isSplurges() {
+        return splurges;
     }
 
-    @Override
-    public int hashCode() {
-        return futures ? 1 : 0;
+    public void setSplurges(boolean splurges) {
+        this.splurges = splurges;
     }
 }
