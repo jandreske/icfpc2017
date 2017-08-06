@@ -224,7 +224,7 @@ class MapBasedGameState implements GameState {
     private boolean takeOption(River river, int punter) {
         if (river.getOption() < 0 && river.getOwner() >= 0 && river.getOwner() != punter) {
             river.setOption(punter);
-            optionsUsed++;
+            if (punter == myPunterId) optionsUsed++;
             return true;
         }
         return false;
