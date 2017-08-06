@@ -16,6 +16,8 @@ public interface GameState {
 
     int getNumPunters();
 
+    int getNumRivers();
+
     /** Get all site IDs, including mines. */
     Set<Integer> getSites();
 

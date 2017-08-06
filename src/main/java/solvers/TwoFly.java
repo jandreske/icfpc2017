@@ -2,6 +2,8 @@ package solvers;
 
 import io.Future;
 import io.River;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import state.GameState;
 
 import java.util.HashSet;
@@ -12,6 +14,7 @@ public class TwoFly implements Solver {
     private River bestChoice = null;
     private final int risk;
 
+    private static final Logger LOG = LoggerFactory.getLogger(TwoFly.class);
     public TwoFly(int riskLevel) {
         this.risk = riskLevel;
     }
@@ -104,10 +107,18 @@ public class TwoFly implements Solver {
 
     @Override
     public Future[] getFutures(GameState state) {
+        int maxTurns = state.getNumRivers() / state.getNumPunters();
+        int maxFutureSteps = maxTurns / 4;
+        int usedSteps = 0;
         Set<Future> futures = new HashSet<>();
         for (int mine : state.getMines()) {
+            if (usedSteps >= maxFutureSteps) break;
             Future future = getFuture(mine, state);
-            if (future != null) futures.add(future);
+            if (future != null) {
+                futures.add(future);
+                usedSteps += state.getShortestRouteLength(future.getSource(), future.getTarget());
+                LOG.info("Added future ({}->{}) with {} / {} steps used", future.getSource(), future.getTarget(), usedSteps, maxFutureSteps);
+            }
         }
         return futures.toArray(new Future[futures.size()]);
     }
@@ -137,7 +148,14 @@ public class TwoFly implements Solver {
             }
             return new Future(mine, site);
         }
-        return new Future(mine, path.get(Math.min(risk, path.size() - 1)).getSource());
+        int index = Math.min(risk, path.size() - 1);
+        River river = path.get(index);
+        River previous = path.get(index - 1);
+        int site = river.getTarget();
+        if (river.getSource() == previous.getSource() || river.getSource() == previous.getTarget()) {
+            site = river.getSource();
+        }
+        return new Future(mine, site);
     }
 
     @Override

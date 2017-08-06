@@ -52,6 +52,11 @@ class MapBasedGameState implements GameState {
         return numPunters;
     }
 
+    @Override
+    public int getNumRivers() {
+        return map.getRivers().size();
+    }
+
     @Transient
     @Override
     public Set<Integer> getSites() {
