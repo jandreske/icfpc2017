@@ -19,6 +19,35 @@ public interface GameState {
 
     int getNumRivers();
 
+    /**
+     * The total number of moves I have in the current game.
+     */
+    @Transient
+    default int getTotalNumberOfMoves() {
+        int numRivers = getNumRivers();
+        int numPunters = getNumPunters();
+        int punterId = getMyPunterId();
+        return (numRivers / numPunters) + ((numRivers % numPunters) > punterId ? 1 : 0);
+    }
+
+    /**
+     * Number of moves this punter has made in this game.
+     */
+    int getMovesPerformed();
+
+    /**
+     * The number of moves I can still issue in this game.
+     */
+    @Transient
+    default int getRemainingNumberOfMoves() {
+        return getTotalNumberOfMoves() - getMovesPerformed();
+    }
+
+    /**
+     * Increment move number.
+     */
+    void movePerformed();
+
     /** Get all site IDs, including mines. */
     Set<Integer> getSites();
 

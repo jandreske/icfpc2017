@@ -201,11 +201,9 @@ public class Punter {
             // 2. Gameplay
             record.println(", \"moves\": ");
             char recordSep = '[';
-            int numRivers = setup.getMap().getRivers().size();
-            int numPunters = setup.getPunters();
-            int punterId = setup.getPunter();
-            int ownMoves = (numRivers / numPunters) + ((numRivers % numPunters) > punterId ? 1 : 0);
-            for (int moveNum = 0; moveNum < ownMoves; moveNum++) {
+            int numPunters = state.getNumPunters();
+            int punterId = state.getMyPunterId();
+            while (state.getRemainingNumberOfMoves() > 0) {
                 Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
                 moveRequest.getMove().moves.forEach(state::applyMove);
                 for (Move move : moveRequest.getMove().moves) {
@@ -219,6 +217,7 @@ public class Punter {
 
                 Move move = getNextMoveWithTimeout(state, TIME_OUT_MS);
                 if (move == null) move = Move.pass(state.getMyPunterId());
+                state.movePerformed();
                 writeJson(out, move);
                 Move.ClaimData claim1 = move.getClaim();
                 if (claim1 != null) {
@@ -304,6 +303,7 @@ public class Punter {
             moveRequest.getMove().moves.forEach(state::applyMove);
             Move move = getNextMoveWithTimeout(state, TIME_OUT_MS);
             if (move == null) move = Move.pass(state.getMyPunterId());
+            state.movePerformed();
             move.setState(state);
             writeJson(out, move);
             LOG.info("Move and new state: {}", move);

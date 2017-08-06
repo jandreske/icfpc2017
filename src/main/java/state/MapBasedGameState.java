@@ -15,20 +15,21 @@ class MapBasedGameState implements GameState {
 
     private int numPunters;
 
+    private int movesPerformed = 0;
+
     private Set<Integer> sites;
     private Set<River> rivers;
     private Set<Integer> mines;
 
     private final java.util.Map<Integer, Integer> credits = new HashMap<>();
 
-
     private GraphMap graphMap;
     private Future[] futures;
     private Settings settings;
 
-    public MapBasedGameState() {}
-
     private int score = -1;
+
+    public MapBasedGameState() {}
 
     public MapBasedGameState(Setup.Request setup) {
         myPunterId = setup.getPunter();
@@ -56,6 +57,16 @@ class MapBasedGameState implements GameState {
     @Override
     public int getNumPunters() {
         return numPunters;
+    }
+
+    @Override
+    public int getMovesPerformed() {
+        return movesPerformed;
+    }
+
+    @Override
+    public void movePerformed() {
+        movesPerformed++;
     }
 
     @Transient
