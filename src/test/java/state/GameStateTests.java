@@ -40,10 +40,22 @@ public class GameStateTests {
         state.getRiver(3,4).get().setOwner(1);
     }
 
+    @Test
+    public void shortestRouteSelfIsEmpty() {
+        Assert.assertTrue(state.getShortestRoute(2, 2).isEmpty());
+    }
 
     @Test
     public void shortestRouteLength() {
         Assert.assertEquals(2, state.getShortestRoute(2,3).size());
+        Assert.assertEquals(1, state.getShortestRoute(0,4).size());
+        Assert.assertEquals(1, state.getShortestRoute(4,0).size());
+    }
+
+    @Test
+    public void canReach() {
+        Assert.assertFalse(state.canReach(1, 2, 3));
+        Assert.assertTrue(state.canReach(1, 1, 4));
     }
 
     @Test

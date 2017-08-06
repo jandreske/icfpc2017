@@ -3,7 +3,6 @@ package solvers;
 import io.Future;
 import io.Move;
 import io.River;
-import org.jgrapht.alg.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import state.GameState;
@@ -82,7 +81,7 @@ public class SplurgeFly implements Solver {
     private Move getMineConnectionStep(GameState state, Set<Integer> mines) {
         if (state.areSplurgesActive()) {
             int credit = state.getSplurgeCredits(state.getMyPunterId());
-            java.util.Map<Pair<Integer, Integer>, Integer> canClaimNow = new HashMap<>();
+            java.util.Map<River, Integer> canClaimNow = new HashMap<>(); // not really a river, just two sites
             boolean canClaimAtOnceLater = false;
 
             for (int mineS : mines) {
@@ -95,7 +94,7 @@ public class SplurgeFly implements Solver {
                     int missing = (int) path.stream().filter(river -> !river.isClaimed()).count();
                     if (hasSingleOpenFragment(state, mineS, mineT)) {
                         if (missing <= credit + 1) {
-                            canClaimNow.put(Pair.of(mineS, mineT), missing);
+                            canClaimNow.put(new River(mineS, mineT), missing);
                         } else {
                             canClaimAtOnceLater = true;
                         }
@@ -103,9 +102,9 @@ public class SplurgeFly implements Solver {
                 }
             }
             //if we can claim an entire path now, lets take the longest and do it
-            if (canClaimNow.size() > 0) {
-                Pair<Integer, Integer> longest = Collections.max(canClaimNow.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-                return getSplurge(state, longest.getFirst(), longest.getSecond());
+            if (!canClaimNow.isEmpty()) {
+                River longest = Collections.max(canClaimNow.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+                return getSplurge(state, longest.getSource(), longest.getTarget());
             }
             //if we can claim an entire future later, lets wait and get splurge credits
             if (canClaimAtOnceLater) return Move.pass(state.getMyPunterId());
@@ -259,7 +258,7 @@ public class SplurgeFly implements Solver {
         int shortest = Integer.MAX_VALUE;
         for (int candidate : mines) {
             if (candidate == mine) continue;
-            int distance = state.getShortestRoute(mine, candidate).size();
+            int distance = state.getShortestRouteLength(mine, candidate);
             if (distance < shortest && distance > 1) {
                 target = candidate;
                 shortest = distance;
