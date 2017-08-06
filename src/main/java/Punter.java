@@ -73,6 +73,12 @@ public class Punter {
         }
     }
 
+    // for non-forking offline server use
+    public static void runOffline(String solver, InputStream in, PrintStream out) throws IOException {
+        Punter punter = new Punter(getSolver(solver));
+        punter.runOfflineMove(in, out);
+    }
+
     private static void runOfflineRound(Solver solver) {
         try {
             Punter punter = new Punter(solver);

@@ -1,5 +1,8 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import Punter
+
+import java.util.concurrent.Executors
 
 jsonSlurper = new JsonSlurper()
 
@@ -73,19 +76,47 @@ def writeJson(PrintStream out, obj) {
     println "SENT ${shorten(json)}"
 }
 
+executor = Executors.newFixedThreadPool(1)
+
+def startPunter(punter) {
+    if (punter.external) {
+        def process = new ProcessBuilder(punter.command).start()
+        [inp: process.getIn(),
+         out: new PrintStream(process.getOut()),
+         state: process
+        ]
+    } else {
+        PipedOutputStream out = new PipedOutputStream()
+        PipedInputStream inp = new PipedInputStream(out)
+        PipedInputStream in2 = new PipedInputStream()
+        [ inp: inp,
+          out: new PrintStream(new PipedOutputStream(in2)),
+          task: executor.submit {Punter.runOffline(punter.command, in2, new PrintStream(out))}
+        ]
+    }
+}
+
+def stopPunter(punter, pstate) {
+    if (punter.external) {
+        pstate.state.waitFor()
+    } else {
+        pstate.task.get()
+        pstate.inp.close()
+        pstate.out.close()
+    }
+}
+
+
 def runSetup(punter, id) {
     punter.id = id
     println "SETUP ${punter} ..."
-    def process = new ProcessBuilder(punter.command)
-                        .start()
-    def inp = process.getIn()
-    def msg1 = readJson(inp)
+    def pstate = startPunter(punter)
+    def msg1 = readJson(pstate.inp)
     punter.name = msg1.me
-    def out = new PrintStream(process.getOut())
-    writeJson(out, [you: punter.name])
+    writeJson(pstate.out, [you: punter.name])
     def time = System.nanoTime()
-    writeJson(out, [punter: punter.id, punters: numPunters, map: map, settings: [futures: true, splurges: true]])
-    def msg2 = readJson(inp)
+    writeJson(pstate.out, [punter: punter.id, punters: numPunters, map: map, settings: [futures: true, splurges: true]])
+    def msg2 = readJson(pstate.inp)
     punter.state = msg2.state
     time = (System.nanoTime() - time) / 1.0e9;
     println(String.format("TIME %.3f seconds", time))
@@ -93,7 +124,7 @@ def runSetup(punter, id) {
         println "TIMEOUT in setup phase"
         System.exit(0)
     }
-    process.waitFor()
+    stopPunter(punter, pstate)
     punter.lastMove = [pass: [punter: punter.id]]
     punter.setupTime = time
 }
@@ -104,16 +135,13 @@ def getLastMoves() {
 
 def runMove(punter) {
     println "### Getting move from punter ${punter.id}..."
-    def process = new ProcessBuilder(punter.command)
-            .start()
-    def inp = process.getIn()
-    def msg1 = readJson(inp)
+    def pstate = startPunter(punter)
+    def msg1 = readJson(pstate.inp)
     punter.name = msg1.me
-    def out = new PrintStream(process.getOut())
-    writeJson(out, [you: punter.name])
+    writeJson(pstate.out, [you: punter.name])
     def time = System.nanoTime()
-    writeJson(out, [move: [moves: getLastMoves()], state: punter.state])
-    def msg2 = readJson(inp)
+    writeJson(pstate.out, [move: [moves: getLastMoves()], state: punter.state])
+    def msg2 = readJson(pstate.inp)
     if (msg2.containsKey('claim')) {
         println "CLAIM ${msg2.claim}"
         claimRiver(msg2.claim)
@@ -137,7 +165,7 @@ def runMove(punter) {
     punter.state = msg2.state
     msg2.remove('state')
     punter.lastMove = msg2
-    process.waitFor()
+    stopPunter(punter, pstate)
 }
 
 def computeScore(int punter) {
@@ -201,7 +229,10 @@ if (args.length < 3) {
     System.exit(1)
 }
 String mapFile = args[0]
-punters = args[1..-1].collect { p -> [command: p, moves: 0, moveTime: 0.0] }
+punters = args[1..-1].collect { p ->
+    [command: p, external: new File(p).canExecute(),
+     moves: 0, moveTime: 0.0]
+}
 numPunters = punters.size()
 
 println "Map: ${mapFile}"
@@ -228,6 +259,7 @@ for (int move = 0;; move++) {
     int punter = move % numPunters
     runMove(punters[punter])
 }
+executor.shutdown()
 
 // sending stop seems unnecessary
 
