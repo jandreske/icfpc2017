@@ -8,7 +8,7 @@ public class Settings {
 
     private boolean options;
 
-    public boolean getFutures() {
+    public boolean isFutures() {
         return futures;
     }
 

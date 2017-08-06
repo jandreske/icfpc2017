@@ -4,7 +4,6 @@ import io.*;
 
 import java.beans.Transient;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -154,9 +153,20 @@ public interface GameState {
      */
     boolean isOnRiver(int punter, int site);
 
-    boolean areFuturesActive();
+    @Transient
+    default boolean areFuturesActive() {
+        return getSettings().isFutures();
+    }
 
-    boolean areSplurgesActive();
+    @Transient
+    default boolean areSplurgesActive() {
+        return getSettings().isSplurges();
+    }
+
+    @Transient
+    default boolean areOptionsActive() {
+        return getSettings().isOptions();
+    }
 
     int getSplurgeCredits(int punter);
 }

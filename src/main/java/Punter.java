@@ -184,7 +184,7 @@ public class Punter {
             Setup.Request setup = readJson(in, Setup.Request.class);
             GameState state = gameStateFactory.create(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
-            if (setup.getSettings() != null && setup.getSettings().getFutures()) {
+            if (setup.getSettings() != null && setup.getSettings().isFutures()) {
                 Future[] futures = solver.getFutures(state);
                 setupResponse.setFutures(futures);
                 state.setFutures(futures);
@@ -286,7 +286,7 @@ public class Punter {
             GameState state = gameStateFactory.create(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
             setupResponse.setState(state);
-            if (setup.getSettings() != null && setup.getSettings().getFutures()) {
+            if (setup.getSettings() != null && setup.getSettings().isFutures()) {
                 Future[] futures = solver.getFutures(state);
                 setupResponse.setFutures(futures);
                 state.setFutures(futures);

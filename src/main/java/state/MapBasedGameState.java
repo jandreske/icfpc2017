@@ -2,6 +2,7 @@ package state;
 
 import io.*;
 
+import javax.annotation.Nonnull;
 import java.beans.Transient;
 import java.util.HashMap;
 import java.util.List;
@@ -377,16 +378,6 @@ class MapBasedGameState implements GameState {
     public boolean isOnRiver(int punter, int site) {
         return getRivers().stream()
                 .anyMatch(r -> r.canUse(punter) && r.touches(site));
-    }
-
-    @Override
-    public boolean areFuturesActive() {
-        return (settings != null && settings.getFutures());
-    }
-
-    @Override
-    public boolean areSplurgesActive() {
-        return (settings != null && settings.isSplurges());
     }
 
     @Override
