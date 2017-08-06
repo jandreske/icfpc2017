@@ -236,12 +236,12 @@ public class Punter {
             int myScore = scoring.scores.stream().filter(score -> score.punter == punterId).findFirst().get().score;
             int rank = numPunters - (int) scoring.scores.stream().filter(score -> score.score < myScore).count();
             LOG.info("RANKING {} / {} with {} points", rank, numPunters, myScore);
-            scoring.scores.forEach(score -> {
-                int computed = state.getScore(score.punter);
-                if (score.score != computed) {
-                    LOG.warn("score mismatch. Server: {}, computed: {}", score.score, computed);
-                }
-            });
+//            scoring.scores.forEach(score -> {
+//                int computed = state.getScore(score.punter);
+//                if (score.score != computed) {
+//                    LOG.warn("score mismatch. Server: {}, computed: {}", score.score, computed);
+//                }
+//            });
             record.println("]}");
             return scoring;
         }

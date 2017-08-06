@@ -49,6 +49,7 @@ public class SplurgeFly implements Solver {
         River best = null;
         int bestPoints = 0;
         for (River river : freeRivers) {
+            if (Thread.currentThread().isInterrupted()) return null;
             boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0)
                     || mines.contains(river.getSource());
             boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0)
@@ -85,6 +86,7 @@ public class SplurgeFly implements Solver {
             boolean canClaimAtOnceLater = false;
 
             for (int mineS : mines) {
+                if (Thread.currentThread().isInterrupted()) return null;
                 for (int mineT : mines) {
                     if (mineS == mineT) continue;
                     if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
@@ -144,6 +146,7 @@ public class SplurgeFly implements Solver {
 
             if (state.getFutures() != null) {
                 for (Future future : state.getFutures()) {
+                    if (Thread.currentThread().isInterrupted()) return null;
                     if (state.isFutureComplete(future)) continue;
                     int steps = state.missingStepsForFuture(future);
                     if (steps == -1) continue;
@@ -232,6 +235,7 @@ public class SplurgeFly implements Solver {
     public Future[] getFutures(GameState state) {
         int risk = getRisk(state);
         int stepDivider = getStepDivider(state);
+        if (risk == 0 || stepDivider == 0) return new Future[0];
         int maxTurns = state.getNumRivers() / state.getNumPunters();
         int maxFutureSteps = maxTurns / stepDivider;
         int usedSteps = 0;
