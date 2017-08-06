@@ -44,14 +44,16 @@ public class Punter {
             case "twofly2":     return new TwoFly(2, 1);
             case "twofly3":     return new TwoFly(3, 1);
             case "twofly4":     return new TwoFly(4, 1);
-            case "twofly4-2":     return new TwoFly(4, 2);
-            case "twofly4-3":     return new TwoFly(4, 3);
-            case "twofly4-4":     return new TwoFly(4, 4);
-            case "twofly-1-2":    return new TwoFly(-1, 2);
-            case "twofly-1-3":    return new TwoFly(-1, 3);
-            case "twofly-1-4":    return new TwoFly(-1, 4);
-            case "twofly5-3":     return new TwoFly(5, 3);
-            case "twofly3-3":     return new TwoFly(3, 3);
+            case "twofly4-2":   return new TwoFly(4, 2);
+            case "twofly4-3":   return new TwoFly(4, 3);
+            case "twofly4-4":   return new TwoFly(4, 4);
+            case "twofly-1-2":  return new TwoFly(-1, 2);
+            case "twofly-1-3":  return new TwoFly(-1, 3);
+            case "twofly-1-4":  return new TwoFly(-1, 4);
+            case "twofly5-3":   return new TwoFly(5, 3);
+            case "twofly3-3":   return new TwoFly(3, 3);
+            case "twofly5-5":   return new TwoFly(5, 5);
+            case "splurgefly":  return new SplurgeFly();
             default:            return new MineConnectClaimer();
         }
     }
@@ -192,7 +194,7 @@ public class Punter {
             LOG.info("Sent ready message: {}", objectMapper.writeValueAsString(setupResponse));
             LOG.info("Punter id: {}", setup.getPunter());
             LOG.info("Number of punters: {}", setup.getPunters());
-            LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
+            //LOG.info("Map: {}", objectMapper.writeValueAsString(setup.getMap()));
             record.println("\"setup\":");
             record.println(objectMapper.writeValueAsString(setup));
 
@@ -224,7 +226,7 @@ public class Punter {
                     recordSep = ',';
                     record.println(objectMapper.writeValueAsString(claim1));
                 }
-                LOG.info("sent move: {}", objectMapper.writeValueAsString(move));
+                LOG.info("sent move: {}\n", objectMapper.writeValueAsString(move));
             }
 
             LOG.info("Receiving scoring info...");

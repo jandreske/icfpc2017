@@ -159,9 +159,9 @@ class MapBasedGameState implements GameState {
         }
         Move.PassData pass = move.getPass();
         if (pass != null) {
-            //TODO this will give false credits at game start
+            //TODO this will give false credits at game start (we start with -1 for now)
             int punter = pass.punter;
-            int cred = credits.getOrDefault(punter, 0);
+            int cred = credits.getOrDefault(punter, -1);
             cred++;
             credits.put(punter, cred);
         }
