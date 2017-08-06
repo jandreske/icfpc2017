@@ -27,13 +27,17 @@ class MapBasedGameState implements GameState {
         myPunterId = setup.getPunter();
         numPunters = setup.getPunters();
         map = setup.getMap();
-        graphMap = new GraphMap(map.getSites(), map.getRivers());
+        graphMap = null;
+    }
+
+    public Map getMap() {
+        return map;
     }
 
     @Transient
     private GraphMap getGraphMap() {
         if (graphMap == null) {
-            graphMap = new GraphMap(map.getSites(), map.getRivers());
+            graphMap = new GraphMap(getSites(), map.getRivers());
         }
         return graphMap;
     }
@@ -48,9 +52,10 @@ class MapBasedGameState implements GameState {
         return numPunters;
     }
 
+    @Transient
     @Override
-    public Map getMap() {
-        return map;
+    public Set<Integer> getSites() {
+        return map.getSites().stream().map(Site::getId).collect(Collectors.toSet());
     }
 
     @Override
@@ -137,20 +142,20 @@ class MapBasedGameState implements GameState {
      */
     @Override
     public boolean canReach(int punter, int site1, int site2) {
-        GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
+        GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
         return punterMap.hasRoute(site1, site2);
     }
 
     @Override
     public boolean canReachMine(int punter, int site) {
-        GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
+        GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
         return map.getMines().stream()
                 .anyMatch(mine -> punterMap.hasRoute(site, mine));
     }
 
     @Override
     public int getScore(int punter) {
-        GraphMap punterMap = new GraphMap(map.getSites(), getRiversByOwner(punter));
+        GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
         return map.getMines().stream()
                 .mapToInt(mine -> getScore(punterMap, mine))
                 .sum();
@@ -164,16 +169,16 @@ class MapBasedGameState implements GameState {
     }
 
     private int getScore(GraphMap punterMap, int mine) {
-        return map.getSites().stream()
+        return getSites().stream()
                 .mapToInt(site -> getScore(punterMap, mine, site))
                 .sum();
     }
 
-    private int getScore(GraphMap punterMap, int mine, Site site) {
-        if (site.getId() == mine || !punterMap.hasRoute(mine, site.getId())) {
+    private int getScore(GraphMap punterMap, int mine, int site) {
+        if (site == mine || !punterMap.hasRoute(mine, site)) {
             return 0;
         }
-        int shortest = getShortestRouteLength(mine, site.getId());
+        int shortest = getShortestRouteLength(mine, site);
         return shortest * shortest;
     }
 
@@ -191,7 +196,7 @@ class MapBasedGameState implements GameState {
     public List<River> getShortestOpenRoute(int punterId, int site1, int site2) {
         Set<River> rivers = getRiversByOwner(punterId);
         rivers.addAll(getUnclaimedRivers());
-        GraphMap punterMap = new GraphMap(map.getSites(), rivers);
+        GraphMap punterMap = new GraphMap(getSites(), rivers);
         return punterMap.getShortestRoute(site1, site2);
     }
 
@@ -204,7 +209,7 @@ class MapBasedGameState implements GameState {
         }
         Set<River> rivers = getRiversByOwner(myPunterId);
         rivers.add(river);
-        GraphMap newMap = new GraphMap(map.getSites(), rivers);
+        GraphMap newMap = new GraphMap(getSites(), rivers);
         int newScore = getScore(newMap);
         return newScore - score;
     }
@@ -216,7 +221,7 @@ class MapBasedGameState implements GameState {
         Set<River> ownOrUnclaimed = map.getRivers().stream()
                 .filter(r -> r.getOwner() == myPunterId || !r.isClaimed())
                 .collect(Collectors.toSet());
-        GraphMap graph = new GraphMap(map.getSites(), ownOrUnclaimed);
+        GraphMap graph = new GraphMap(getSites(), ownOrUnclaimed);
         // TODO
         return null;
     }
@@ -227,6 +232,12 @@ class MapBasedGameState implements GameState {
     @Override
     public boolean isMine(int siteId) {
         return map.getMines().contains(siteId);
+    }
+
+    @Transient
+    @Override
+    public Set<Integer> getMines() {
+        return map.getMines();
     }
 
     @Override

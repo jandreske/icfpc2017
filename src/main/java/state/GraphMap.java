@@ -1,7 +1,6 @@
 package state;
 
 import io.River;
-import io.Site;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.AStarShortestPath;
@@ -16,9 +15,9 @@ class GraphMap {
 
     private final ShortestPathAlgorithm<Integer, River> spa;
 
-    GraphMap(Iterable<Site> sites, Iterable<River> rivers) {
+    GraphMap(Iterable<Integer> sites, Iterable<River> rivers) {
         g = new SimpleGraph<>(River.class);
-        sites.forEach(site -> g.addVertex(site.getId()));
+        sites.forEach(site -> g.addVertex(site));
         rivers.forEach(river -> g.addEdge(river.getSource(), river.getTarget(), river));
 
         spa = new AStarShortestPath<>(g, (v,t) -> (v == t) ? 0 : 1);

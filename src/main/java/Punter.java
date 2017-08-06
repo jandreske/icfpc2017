@@ -233,7 +233,7 @@ public class Punter {
         LOG.info("Handshake completed");
 
         LOG.info("Receiving...");
-        Object req = readOneOf(in, Gameplay.Request.class, Setup.Request.class, Scoring.class);
+        Object req = readOfflineRequest(in);
         if (req instanceof Setup.Request) {
             Setup.Request setup = (Setup.Request) req;
             LOG.info("Received setup request");
@@ -285,21 +285,51 @@ public class Punter {
         return objectMapper.readValue(data, clazz);
     }
 
-    private Object readOneOf(InputStream in, Class<?>... classes) throws IOException {
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
+    private Object readOfflineRequest(InputStream in) throws IOException {
         int length = decodeLength(in);
         byte[] data = readBytes(in, length);
-        for (Class<?> clazz : classes) {
-            try {
-                return objectMapper.readValue(data, clazz);
+        Class<?> clazz;
+        // HACK
+        if (contains(data, "\"move\"")) {
+            clazz = Gameplay.Request.class;
+        } else if (contains(data, "\"stop\"")) {
+            clazz = Scoring.class;
+        } else {
+            clazz = Setup.Request.class;
+        }
+        return objectMapper.readValue(data, clazz);
+    }
+
+    private static boolean contains(byte[] data, String needle) {
+        int n = data.length;
+        int m = needle.length();
+        for (int p = 0;;) {
+            p = indexOf(data, needle.charAt(0), p);
+            if (p < 0) {
+                return false;
             }
-            catch (JsonMappingException ex) {
-                LOG.debug("expected exception trying JSON", ex);
-                // continue
+            boolean match = true;
+            for (int i = 1; i < m && p + i < n; i++) {
+                if (data[p+i] != needle.charAt(i)) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                return true;
+            }
+            p++;
+        }
+    }
+
+    private static int indexOf(byte[] data, int value, int startOffset) {
+        int n = data.length;
+        for (int i = startOffset; i < n; i++) {
+            if (data[i] == value) {
+                return i;
             }
         }
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return objectMapper.readValue(data, classes[0]);
+        return -1;
     }
 
     private static byte[] readBytes(InputStream in, int length) throws IOException {

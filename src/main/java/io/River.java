@@ -4,6 +4,9 @@ import state.LogicException;
 
 import java.beans.Transient;
 
+/**
+ * River, augmented by owner id (-1 if unclaimed).
+ */
 public class River {
 
     private int source;

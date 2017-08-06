@@ -113,7 +113,7 @@ public class HeuristicSolver implements Solver {
     private River chooseLongestPath(River[] rivers) {
         int maxSoFar = 0;
         int maxIndex = 0;
-        List<Integer> mines = state.getMap().getMines().stream()
+        List<Integer> mines = state.getMines().stream()
                 .filter(mine -> state.isOnRiver(state.getMyPunterId(), mine))
                 .collect(Collectors.toList());
         for (int i = 0; i < rivers.length; i++) {

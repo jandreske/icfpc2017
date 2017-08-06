@@ -2,7 +2,6 @@ package solvers;
 
 import io.Future;
 import io.River;
-import io.Site;
 import state.GameState;
 
 import java.util.HashSet;
@@ -36,7 +35,7 @@ public class TwoFly implements Solver {
             if (bestFuture != null) return state.nextStepForFuture(bestFuture);
         }
 
-        Set<Integer> mines = state.getMap().getMines();
+        Set<Integer> mines = state.getMines();
         if (mines.size() == 1) {
             int mine = mines.iterator().next();
             if (state.getOwnRiversTouching(mine).size() < 10) {
@@ -106,7 +105,7 @@ public class TwoFly implements Solver {
     @Override
     public Future[] getFutures(GameState state) {
         Set<Future> futures = new HashSet<>();
-        for (int mine : state.getMap().getMines()) {
+        for (int mine : state.getMines()) {
             Future future = getFuture(mine, state);
             if (future != null) futures.add(future);
         }
@@ -115,7 +114,7 @@ public class TwoFly implements Solver {
 
     private Future getFuture(int mine, GameState state) {
         if (risk == 0) return null;
-        Set<Integer> mines = state.getMap().getMines();
+        Set<Integer> mines = state.getMines();
         int target = -1;
         int shortest = Integer.MAX_VALUE;
         for (int candidate : mines) {

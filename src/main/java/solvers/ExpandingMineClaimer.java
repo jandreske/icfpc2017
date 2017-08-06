@@ -15,7 +15,7 @@ public class ExpandingMineClaimer implements Solver {
 
     @Override
     public River getNextMove(GameState state) {
-        Set<Integer> mines = state.getMap().getMines();
+        Set<Integer> mines = state.getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
         setBestChoice(freeRivers.iterator().next());
 

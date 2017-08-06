@@ -42,7 +42,7 @@ public class FutureConnecter implements Solver {
     @Override
     public Future[] getFutures(GameState state) {
         Set<Future> futures = new HashSet<>();
-        for (int mine : state.getMap().getMines()) {
+        for (int mine : state.getMines()) {
             Future future = getFuture(mine, state);
             if (future != null) futures.add(future);
         }
@@ -51,7 +51,7 @@ public class FutureConnecter implements Solver {
 
     private Future getFuture(int mine, GameState state) {
         if (risk == 0) return null;
-        Set<Integer> mines = state.getMap().getMines();
+        Set<Integer> mines = state.getMines();
 
         Set<River> rivers = state.getRiversTouching(mine);
         if (rivers.isEmpty()) return null;

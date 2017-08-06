@@ -1,14 +1,20 @@
 package io;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * Site without coordinates.
+ * For serialization only, not used anywhere else.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Site {
 
-    private int id;
+    private final int id;
 
-    private double x, y;
-
-    public Site() {}
-
-    public Site(int id) {
+    @JsonCreator
+    public Site(@JsonProperty("id") int id) {
         this.id = id;
     }
 
@@ -18,14 +24,6 @@ public class Site {
 
     public String toString() {
         return Integer.toString(id);
-    }
-
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
     }
 
     @Override

@@ -19,7 +19,7 @@ public class MineConnectClaimer implements Solver {
     public River getNextMove(GameState state) {
         Set<River> freeRivers = state.getUnclaimedRivers();
         setBestChoice(freeRivers.iterator().next());
-        Set<Integer> mines = state.getMap().getMines();
+        Set<Integer> mines = state.getMines();
 
         for (int mineS : mines) {
             for (int mineT : mines) {

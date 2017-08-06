@@ -11,13 +11,14 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface GameState {
+
     int getMyPunterId();
 
     int getNumPunters();
 
-    Map getMap();
+    /** Get all site IDs, including mines. */
+    Set<Integer> getSites();
 
-    @Transient
     Set<River> getUnclaimedRivers();
 
     Set<River> getRiversTouching(int siteId);
@@ -28,7 +29,6 @@ public interface GameState {
 
     long getDegree(int siteId);
 
-    @Transient
     Set<River> getOwnRivers();
 
     Set<River> getRiversByOwner(int punter);
@@ -54,10 +54,13 @@ public interface GameState {
     int getPotentialPoints(River river);
 
     // API ideas: best candidate rivers, considering already taken ones
-    @Transient
     List<River> getMostPromisingRivers();
 
+    /** Is the given site ID a mine? */
     boolean isMine(int siteId);
+
+    /** Get the set of site IDs that are mines. */
+    Set<Integer> getMines();
 
     void setFutures(Future[] futures);
 

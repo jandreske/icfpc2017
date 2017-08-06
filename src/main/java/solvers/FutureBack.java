@@ -2,7 +2,6 @@ package solvers;
 
 import io.Future;
 import io.River;
-import io.Site;
 import state.GameState;
 
 import java.util.HashSet;
@@ -43,7 +42,7 @@ public class FutureBack implements Solver {
     @Override
     public Future[] getFutures(GameState state) {
         Set<Future> futures = new HashSet<>();
-        for (int mine : state.getMap().getMines()) {
+        for (int mine : state.getMines()) {
             Future future = getFuture(mine, state);
             if (future != null) futures.add(future);
         }
@@ -52,11 +51,10 @@ public class FutureBack implements Solver {
 
     private Future getFuture(int mine, GameState state) {
         if (risk == 0) return null;
-        Set<Integer> mines = state.getMap().getMines();
-        for (Site site : state.getMap().getSites()) {
-            if (mines.contains(site.getId())) continue;
-            if (state.getShortestRoute(mine, site.getId()).size() == risk) {
-                return new Future(mine, site.getId());
+        for (int site : state.getSites()) {
+            if (state.isMine(site)) continue;
+            if (state.getShortestRoute(mine, site).size() == risk) {
+                return new Future(mine, site);
             }
         }
         return null;
