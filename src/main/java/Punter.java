@@ -36,6 +36,10 @@ public class Punter {
             case "back4":       return new FutureBack(4);
             case "back5":       return new FutureBack(5);
             case "back6":       return new FutureBack(6);
+            case "twofly-1":    return new TwoFly(-1);
+            case "twofly2":     return new TwoFly(2);
+            case "twofly3":     return new TwoFly(3);
+            case "twofly4":     return new TwoFly(4);
             default:            return new MineConnectClaimer();
         }
     }
