@@ -232,4 +232,12 @@ public class GameState {
         }
         return null;
     }
+    
+    /**
+     * Ist this site the source or target of any river claimed by the punter?
+     */
+    public boolean isOnRiver(int punter, int site) {
+        return map.getRivers().stream()
+                .anyMatch(r -> r.getOwner() == punter && r.touches(site));
+    }
 }

@@ -13,6 +13,8 @@ import state.GameState;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class HeuristicSolver implements Solver {
 
@@ -111,6 +113,9 @@ public class HeuristicSolver implements Solver {
     private River chooseLongestPath(River[] rivers) {
         int maxSoFar = 0;
         int maxIndex = 0;
+        List<Integer> mines = state.getMap().getMines().stream()
+                .filter(mine -> state.isOnRiver(state.getMyPunterId(), mine))
+                .collect(Collectors.toList());
         for (int i = 0; i < rivers.length; i++) {
             River river = rivers[i];
             int site;
@@ -119,7 +124,7 @@ public class HeuristicSolver implements Solver {
             } else {
                 site = river.getTarget();
             }
-            for (int mine : state.getMap().getMines()) {
+            for (int mine : mines) {
                 int dist = state.getShortestRouteLength(mine, site);
                 if (dist > maxSoFar) {
                     maxSoFar = dist;
