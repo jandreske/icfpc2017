@@ -1,7 +1,10 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleAbstractTypeResolver;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.*;
 import io.Future;
 import org.slf4j.Logger;
@@ -9,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import solvers.*;
 import solvers.chris.HeuristicSolver;
 import state.GameState;
+import state.GameStateFactory;
 
 import java.io.*;
 
@@ -99,11 +103,17 @@ public class Punter {
 
     private final ObjectMapper objectMapper;
     private final Solver solver;
+    private final GameStateFactory gameStateFactory;
 
     private Punter(Solver solver) {
+        gameStateFactory = new GameStateFactory();
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+        SimpleModule module = new SimpleModule("ASoMModel", Version.unknownVersion());
+        SimpleAbstractTypeResolver resolver = new SimpleAbstractTypeResolver();
+        resolver.addMapping(GameState.class, gameStateFactory.getImplementationClass());
+        module.setAbstractTypes(resolver);
+        objectMapper.registerModule(module);
         this.solver = solver;
     }
 
@@ -123,7 +133,7 @@ public class Punter {
             // 1. Setup
             LOG.info("Receiving setup...");
             Setup.Request setup = readJson(in, Setup.Request.class);
-            GameState state = new GameState(setup);
+            GameState state = gameStateFactory.create(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
             if (setup.getSettings() != null && setup.getSettings().getFutures()) {
                 Future[] futures = solver.getFutures(state);
@@ -227,7 +237,7 @@ public class Punter {
         if (req instanceof Setup.Request) {
             Setup.Request setup = (Setup.Request) req;
             LOG.info("Received setup request");
-            GameState state = new GameState(setup);
+            GameState state = gameStateFactory.create(setup);
             Setup.Response setupResponse = new Setup.Response(setup.getPunter());
             setupResponse.setState(state);
             if (setup.getSettings() != null && setup.getSettings().getFutures()) {
