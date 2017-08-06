@@ -17,6 +17,8 @@ public class River {
 
     private int owner = -1;
 
+    private int option = -1;
+
     @JsonCreator
     public River(@JsonProperty("source") int source, @JsonProperty("target") int target) {
         if (source <= target) {
@@ -50,6 +52,18 @@ public class River {
 
     public void setOwner(int owner) {
         this.owner = owner;
+    }
+
+    /**
+     * Return punter id who has bought the option for this river, or -1 if the
+     * option has not been bought yet.
+     */
+    public int getOption() {
+        return option;
+    }
+
+    public void setOption(int option) {
+        this.option = option;
     }
 
     @Transient

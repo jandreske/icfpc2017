@@ -15,6 +15,8 @@ class MapBasedGameState implements GameState {
 
     private int numPunters;
 
+    private int optionsUsed = 0;
+
     private int movesPerformed = 0;
 
     private Set<Integer> sites;
@@ -81,6 +83,11 @@ class MapBasedGameState implements GameState {
     @Override
     public int getMovesPerformed() {
         return movesPerformed;
+    }
+
+    @Override
+    public int getOptionsUsed() {
+        return optionsUsed;
     }
 
     @Override
@@ -183,14 +190,24 @@ class MapBasedGameState implements GameState {
             int n = splurge.route.size();
             for (int i = 1; i < n; i++) {
                 River river = getRiver(splurge.route.get(i-1), splurge.route.get(i)).get();
-                if (river.isClaimed() && punter != myPunterId) {
-                    throw new LogicException("river " + river + " claimed by " + punter + " but already owned by " + river.getOwner());
+                if (!river.isClaimed()) {
+                    river.setOwner(punter);
+                } else if (!takeOption(river, punter)) {
+                    throw new LogicException("river " + river + " not eligible for splurge");
                 }
-                river.setOwner(splurge.punter);
                 cred--;
             }
             credits.put(punter, cred);
-            invalidateCaches(splurge.punter);
+            invalidateCaches(punter);
+            return true;
+        }
+        Move.ClaimData option = move.getOption();
+        if (option != null) {
+            River river = getRiver(option.source, option.target).get();
+            if (!takeOption(river, option.punter)) {
+                throw new LogicException("river " + river + " not eligible for option");
+            }
+            invalidateCaches(option.punter);
             return true;
         }
         Move.PassData pass = move.getPass();
@@ -200,6 +217,15 @@ class MapBasedGameState implements GameState {
             int cred = credits.getOrDefault(punter, -1);
             cred++;
             credits.put(punter, cred);
+        }
+        return false;
+    }
+
+    private boolean takeOption(River river, int punter) {
+        if (river.getOption() < 0 && river.getOwner() >= 0 && river.getOwner() != punter) {
+            river.setOption(punter);
+            optionsUsed++;
+            return true;
         }
         return false;
     }

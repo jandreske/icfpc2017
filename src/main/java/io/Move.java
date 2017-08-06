@@ -19,7 +19,7 @@ public class Move {
 
         @Override
         public String toString() {
-            return "claim " + punter + " " + source + "-" + target;
+            return punter + " " + source + "-" + target;
         }
 
     }
@@ -29,13 +29,29 @@ public class Move {
 
         @Override
         public String toString() {
-            return "pass " + punter;
+            return "Pass " + punter;
         }
     }
 
     public static class SplurgeData {
         public int punter;
         public List<Integer> route = new ArrayList<>();
+
+        @Override
+        public String toString() {
+            StringBuilder b = new StringBuilder();
+            b.append("Splurge ");
+            b.append(punter);
+            b.append(' ');
+            char sep = '<';
+            for (int site : route) {
+                b.append(sep);
+                sep = '-';
+                b.append(site);
+            }
+            b.append('>');
+            return b.toString();
+        }
     }
 
     public static Move claim(int punter, River river) {
@@ -69,6 +85,7 @@ public class Move {
     private ClaimData claim = null;
     private PassData pass = null;
     private SplurgeData splurge = null;
+    private ClaimData option = null;
     private GameState state = null;
 
     /** Returns null if this move is a pass. */
@@ -85,6 +102,10 @@ public class Move {
         return splurge;
     }
 
+    public ClaimData getOption() {
+        return option;
+    }
+
     /** Offline mode only. */
     public GameState getState() {
         return state;
@@ -96,6 +117,15 @@ public class Move {
 
     @Override
     public String toString() {
-        return (claim != null ? claim.toString() : pass.toString());
+        if (claim != null) {
+            return "Claim " + claim;
+        }
+        if (option != null) {
+            return "Option " + option;
+        }
+        if (pass != null) {
+            return pass.toString();
+        }
+        return splurge.toString();
     }
 }

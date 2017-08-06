@@ -6,6 +6,8 @@ public class Settings {
 
     private boolean splurges;
 
+    private boolean options;
+
     public boolean getFutures() {
         return futures;
     }
@@ -20,5 +22,13 @@ public class Settings {
 
     public void setSplurges(boolean splurges) {
         this.splurges = splurges;
+    }
+
+    public boolean isOptions() {
+        return options;
+    }
+
+    public void setOptions(boolean options) {
+        this.options = options;
     }
 }

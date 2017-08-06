@@ -33,6 +33,16 @@ public interface GameState {
     int getMovesPerformed();
 
     /**
+     * Number of options that have been used. Maximum is getMines().size().
+     */
+    int getOptionsUsed();
+
+    @Transient
+    default int getRemainingOptions() {
+        return getMines().size() - getOptionsUsed();
+    }
+
+    /**
      * The number of moves I can still issue in this game.
      */
     @Transient
