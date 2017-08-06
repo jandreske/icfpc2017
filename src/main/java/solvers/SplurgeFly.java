@@ -18,6 +18,42 @@ public class SplurgeFly implements Solver {
 
     @Override
     public Move getNextMove(GameState state) {
+        Move move = getMove(state);
+        if (move.getClaim() != null
+                && state.areSplurgesActive()
+                && state.getSplurgeCredits(state.getMyPunterId()) > 0) {
+            //we want to do a claim, but we have splurge credits left - so lets splurge a bit instead
+            River river = new River(move.getClaim().source, move.getClaim().target);
+            Set<River> candidates = new HashSet<>();
+            candidates.addAll(state.getUnclaimedRiversTouching(river.getSource()));
+            candidates.addAll(state.getUnclaimedRiversTouching(river.getTarget()));
+            candidates.remove(river);
+            if (candidates.isEmpty()) return move;
+            River best = null;
+            int bestPoints = 0;
+            for (River candidate : candidates) {
+                int points = state.getPotentialPoints(river, candidate);
+                if (best == null || points > bestPoints) {
+                    best = candidate;
+                    bestPoints = points;
+                }
+            }
+            List<Integer> sites = new ArrayList<>();
+            if (best.getSource() == river.getSource() || best.getSource() == river.getTarget()) {
+                sites.add(best.getTarget());
+                sites.add(best.getSource());
+                sites.add(river.getOpposite(best.getSource()));
+            } else {
+                sites.add(best.getSource());
+                sites.add(best.getTarget());
+                sites.add(river.getOpposite(best.getTarget()));
+            }
+            return Move.splurge(state.getMyPunterId(), sites);
+        }
+        return move;
+    }
+
+    private Move getMove(GameState state) {
         Set<Integer> mines = state.getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
         setBestChoice(Move.claim(state.getMyPunterId(), state.getUnclaimedRivers().iterator().next()));
@@ -106,8 +142,8 @@ public class SplurgeFly implements Solver {
                 River longest = Collections.max(canClaimNow.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
                 return getSplurge(state, longest.getSource(), longest.getTarget());
             }
-            //if we can claim an entire future later, lets wait and get splurge credits
-            if (canClaimAtOnceLater) return Move.pass(state.getMyPunterId());
+            //if we can claim an entire future later, lets wait and get splurge credits unless we are running out of time
+            if (canClaimAtOnceLater && enoughMovesLeft(state)) return Move.pass(state.getMyPunterId());
         }
 
 
@@ -164,7 +200,8 @@ public class SplurgeFly implements Solver {
                     return getSplurge(state, longest.getSource(), longest.getTarget());
                 }
                 //if we can claim an entire future later, lets wait and get splurge credits
-                if (canClaimAtOnceLater) return Move.pass(state.getMyPunterId());
+                //unless there are too few turnes left
+                if (canClaimAtOnceLater && enoughMovesLeft(state)) return Move.pass(state.getMyPunterId());
             }
         }
 
@@ -184,6 +221,13 @@ public class SplurgeFly implements Solver {
             if (bestFuture != null) return Move.claim(state.getMyPunterId(), state.nextStepForFuture(bestFuture));
         }
         return null;
+    }
+
+    private boolean enoughMovesLeft(GameState state) {
+        int movesLeft = state.getRemainingNumberOfMoves();
+        if (movesLeft < state.getSplurgeCredits(state.getMyPunterId())) return false;
+        if (3 * movesLeft < state.getMovesPerformed()) return false;
+        return true;
     }
 
     private Move getSplurge(GameState state, int sourceSite, int targetSite) {

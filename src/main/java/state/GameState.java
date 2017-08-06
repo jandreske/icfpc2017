@@ -125,6 +125,11 @@ public interface GameState {
      */
     int getPotentialPoints(River river);
 
+    /**
+     * Compute potential score increase from claiming the given two rivers.
+     */
+    int getPotentialPoints(River river1, River river2);
+
     /** Is the given site ID a mine? */
     default boolean isMine(int siteId) {
         return getMines().contains(siteId);

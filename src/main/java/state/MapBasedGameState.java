@@ -308,6 +308,21 @@ class MapBasedGameState implements GameState {
     }
 
     @Override
+    public int getPotentialPoints(River river1, River river2) {
+        if (river1.isClaimed() || river2.isClaimed()) return 0;
+        //if we did not calculate score since last own move, do it now
+        if (score < 0) {
+            score = getScore(myPunterId);
+        }
+        Set<River> rivers = getRiversByOwner(myPunterId);
+        rivers.add(river1);
+        rivers.add(river2);
+        GraphMap newMap = new GraphMap(getSites(), rivers);
+        int newScore = getScore(newMap);
+        return newScore - score;
+    }
+
+    @Override
     public Set<Integer> getMines() {
         return mines;
     }
