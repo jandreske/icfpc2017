@@ -15,9 +15,12 @@ class MapBasedGameState implements GameState {
 
     private int numPunters;
 
-    private java.util.Map<Integer, Integer> credits = new HashMap<>();
+    private Set<Integer> sites;
+    private Set<River> rivers;
+    private Set<Integer> mines;
 
-    private Map map;
+    private final java.util.Map<Integer, Integer> credits = new HashMap<>();
+
 
     private GraphMap graphMap;
     private Future[] futures;
@@ -30,19 +33,17 @@ class MapBasedGameState implements GameState {
     public MapBasedGameState(Setup.Request setup) {
         myPunterId = setup.getPunter();
         numPunters = setup.getPunters();
-        map = setup.getMap();
+        sites = setup.getMap().getSites().stream().map(Site::getId).collect(Collectors.toSet());
+        rivers = setup.getMap().getRivers();
+        mines = setup.getMap().getMines();
         settings = setup.getSettings();
         graphMap = null;
-    }
-
-    public Map getMap() {
-        return map;
     }
 
     @Transient
     private GraphMap getGraphMap() {
         if (graphMap == null) {
-            graphMap = new GraphMap(getSites(), map.getRivers());
+            graphMap = new GraphMap(getSites(), getRivers());
         }
         return graphMap;
     }
@@ -60,61 +61,60 @@ class MapBasedGameState implements GameState {
     @Transient
     @Override
     public int getNumRivers() {
-        return map.getRivers().size();
+        return getRivers().size();
     }
 
-    @Transient
     @Override
     public Set<Integer> getSites() {
-        return map.getSites().stream().map(Site::getId).collect(Collectors.toSet());
+        return sites;
     }
 
     @Override
     @Transient
     public Set<River> getUnclaimedRivers() {
-        return map.getRivers().stream()
+        return getRivers().stream()
                 .filter(r -> !r.isClaimed())
                 .collect(Collectors.toSet());
     }
 
     @Override
     public Set<River> getRiversTouching(int siteId) {
-        return map.getRivers().stream()
+        return getRivers().stream()
                 .filter(r -> r.touches(siteId))
                 .collect(Collectors.toSet());
     }
 
     @Override
     public Set<River> getUnclaimedRiversTouching(int siteId) {
-        return map.getRivers().stream()
+        return getRivers().stream()
                 .filter(r -> r.touches(siteId) && !r.isClaimed())
                 .collect(Collectors.toSet());
     }
 
     @Override
     public Set<River> getOwnRiversTouching(int siteId) {
-        return map.getRivers().stream()
+        return getRivers().stream()
                 .filter(r -> r.getOwner() == myPunterId && r.touches(siteId))
                 .collect(Collectors.toSet());
     }
 
     @Override
     public int getDegree(int siteId) {
-        return (int) map.getRivers().stream()
+        return (int) getRivers().stream()
                 .filter(r -> r.touches(siteId))
                 .count();
     }
 
     @Override
     public Set<River> getRiversByOwner(int punter) {
-        return map.getRivers().stream()
+        return getRivers().stream()
                 .filter(r -> r.getOwner() == punter)
                 .collect(Collectors.toSet());
     }
 
     @Override
     public Optional<River> getRiver(int source, int target) {
-        return map.getRivers().stream()
+        return getRivers().stream()
                 .filter(r -> (r.getSource() == source && r.getTarget() == target)
                           || (r.getSource() == target && r.getTarget() == source))
                 .findAny();
@@ -180,20 +180,20 @@ class MapBasedGameState implements GameState {
     @Override
     public boolean canReachMine(int punter, int site) {
         GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
-        return map.getMines().stream()
+        return getMines().stream()
                 .anyMatch(mine -> punterMap.hasRoute(site, mine));
     }
 
     @Override
     public int getScore(int punter) {
         GraphMap punterMap = new GraphMap(getSites(), getRiversByOwner(punter));
-        return map.getMines().stream()
+        return getMines().stream()
                 .mapToInt(mine -> getScore(punterMap, mine))
                 .sum();
     }
 
     private int getScore(GraphMap punterMap) {
-        return map.getMines().stream()
+        return getMines().stream()
                 .mapToInt(mine -> getScore(punterMap, mine))
                 .sum();
     }
@@ -244,10 +244,9 @@ class MapBasedGameState implements GameState {
         return newScore - score;
     }
 
-    @Transient
     @Override
     public Set<Integer> getMines() {
-        return map.getMines();
+        return mines;
     }
 
     @Override
@@ -286,7 +285,7 @@ class MapBasedGameState implements GameState {
      */
     @Override
     public boolean isOnRiver(int punter, int site) {
-        return map.getRivers().stream()
+        return getRivers().stream()
                 .anyMatch(r -> r.getOwner() == punter && r.touches(site));
     }
 
@@ -303,5 +302,9 @@ class MapBasedGameState implements GameState {
     @Override
     public int getSplurgeCredits(int punterId) {
         return credits.get(punterId);
+    }
+
+    public Set<River> getRivers() {
+        return rivers;
     }
 }
