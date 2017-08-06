@@ -10,72 +10,40 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class TwoFly implements Solver {
-    private River bestChoice = null;
-    private final int risk;
-    private final int stepDivider;
+public class SplurgeFly implements Solver {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TwoFly.class);
-    public TwoFly(int riskLevel, int stepDivider) {
-        this.risk = riskLevel;
-        this.stepDivider = stepDivider;
-    }
+    private River bestChoice = null;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SplurgeFly.class);
+
 
     @Override
     public River getNextMove(GameState state) {
+        Set<Integer> mines = state.getMines();
         Set<River> freeRivers = state.getUnclaimedRivers();
         setBestChoice(state.getUnclaimedRivers().iterator().next());
-        Future bestFuture = null;
-        int shortest = Integer.MAX_VALUE;
-        if (state.getFutures() != null) {
-            for (Future future : state.getFutures()) {
-                if (state.isFutureComplete(future)) continue;
-                int steps = state.missingStepsForFuture(future);
-                if (steps == -1) continue;
-                if (bestFuture == null || steps < shortest) {
-                    shortest = steps;
-                    bestFuture = future;
-                }
-            }
-            if (bestFuture != null) return state.nextStepForFuture(bestFuture);
-        }
 
-        Set<Integer> mines = state.getMines();
-        if (mines.size() == 1) {
-            int mine = mines.iterator().next();
-            if (state.getOwnRiversTouching(mine).size() < 10) {
-                Set<River> rivers = state.getUnclaimedRiversTouching(mine);
-                if (!rivers.isEmpty()) {
-                    return rivers.iterator().next();
-                }
-            }
-        }
+        //if there is just one mine, and we have less than 10 connections, grab one
+        River river = getSingleMineRiver(state, mines);
+        if (river != null) return river;
 
-        List<River> bestPath = null;
-        shortest = Integer.MAX_VALUE;
-        for (int mineS : mines) {
-            for (int mineT : mines) {
-                if (mineS == mineT) continue;
-                if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
-                List<River> path = state.getShortestOpenRoute(state.getMyPunterId(), mineS, mineT);
-                if (path.isEmpty()) continue;
-                int missing = (int) path.stream().filter(river -> !river.isClaimed()).count();
-                if (bestPath == null || missing < shortest) {
-                    bestPath = path;
-                    shortest = missing;
-                }
-            }
-        }
+        //if we have an unfulfilled future that is still possible to fulfill, get the next step for that
+        river = getNextFutureStep(state);
+        if (river != null) return river;
 
-        if (bestPath != null) {
-            for (River river : bestPath) {
-                if (!river.isClaimed()) {
-                    return river;
-                }
-            }
-        }
+        //if we can connect two mines which are not yet connected, work on that
+        river = getMineConnectionStep(state, mines);
+        if (river != null) return river;
 
+        //if we have no other idea, get the one which gives the most points
+        river = getMaxPoints(state, mines, freeRivers);
+        if (river != null) return river;
 
+        // if nothing even gices points, just take something (to hurt other players)
+        return freeRivers.iterator().next();
+    }
+
+    private River getMaxPoints(GameState state, Set<Integer> mines, Set<River> freeRivers) {
         River best = null;
         int bestPoints = 0;
         for (River river : freeRivers) {
@@ -102,20 +70,78 @@ public class TwoFly implements Solver {
                 setBestChoice(river);
             }
         }
+        return best;
+    }
 
-        if (best != null) return best;
-        return freeRivers.iterator().next();
+    private River getMineConnectionStep(GameState state, Set<Integer> mines) {
+        List<River> bestPath = null;
+        int shortest = Integer.MAX_VALUE;
+        for (int mineS : mines) {
+            for (int mineT : mines) {
+                if (mineS == mineT) continue;
+                if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
+                List<River> path = state.getShortestOpenRoute(state.getMyPunterId(), mineS, mineT);
+                if (path.isEmpty()) continue;
+                int missing = (int) path.stream().filter(river -> !river.isClaimed()).count();
+                if (bestPath == null || missing < shortest) {
+                    bestPath = path;
+                    shortest = missing;
+                }
+            }
+        }
+
+        if (bestPath != null) {
+            for (River river : bestPath) {
+                if (!river.isClaimed()) {
+                    return river;
+                }
+            }
+        }
+        return null;
+    }
+
+    private River getNextFutureStep(GameState state) {
+        Future bestFuture = null;
+        int shortest = Integer.MAX_VALUE;
+        if (state.getFutures() != null) {
+            for (Future future : state.getFutures()) {
+                if (state.isFutureComplete(future)) continue;
+                int steps = state.missingStepsForFuture(future);
+                if (steps == -1) continue;
+                if (bestFuture == null || steps < shortest) {
+                    shortest = steps;
+                    bestFuture = future;
+                }
+            }
+            if (bestFuture != null) return state.nextStepForFuture(bestFuture);
+        }
+        return null;
+    }
+
+    private River getSingleMineRiver(GameState state, Set<Integer> mines) {
+        if (mines.size() == 1) {
+            int mine = mines.iterator().next();
+            if (state.getOwnRiversTouching(mine).size() < 10) {
+                Set<River> rivers = state.getUnclaimedRiversTouching(mine);
+                if (!rivers.isEmpty()) {
+                    return rivers.iterator().next();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
     public Future[] getFutures(GameState state) {
+        int risk = getRisk(state);
+        int stepDivider = getStepDivider(state);
         int maxTurns = state.getNumRivers() / state.getNumPunters();
         int maxFutureSteps = maxTurns / stepDivider;
         int usedSteps = 0;
         Set<Future> futures = new HashSet<>();
         for (int mine : state.getMines()) {
             if (usedSteps >= maxFutureSteps) break;
-            Future future = getFuture(mine, state);
+            Future future = getFuture(mine, state, risk);
             if (future != null) {
                 futures.add(future);
                 usedSteps += state.getShortestRouteLength(future.getSource(), future.getTarget());
@@ -125,7 +151,7 @@ public class TwoFly implements Solver {
         return futures.toArray(new Future[futures.size()]);
     }
 
-    private Future getFuture(int mine, GameState state) {
+    private Future getFuture(int mine, GameState state, int risk) {
         if (risk == 0) return null;
         Set<Integer> mines = state.getMines();
         int target = -1;
@@ -162,7 +188,7 @@ public class TwoFly implements Solver {
 
     @Override
     public String getName() {
-        return "Two Fly " + risk + " at 1/" + stepDivider;
+        return "Splurge Fly";
     }
 
     @Override
@@ -172,5 +198,15 @@ public class TwoFly implements Solver {
 
     private synchronized void setBestChoice(River river) {
         bestChoice = river;
+    }
+
+    private int getRisk(GameState state) {
+        //TODO calculate risk based on map size etc
+        return 4;
+    }
+
+    private int getStepDivider(GameState state) {
+        //TODO calculate divider based on map
+        return 3;
     }
 }

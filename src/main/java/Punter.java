@@ -40,10 +40,13 @@ public class Punter {
             case "back4":       return new FutureBack(4);
             case "back5":       return new FutureBack(5);
             case "back6":       return new FutureBack(6);
-            case "twofly-1":    return new TwoFly(-1);
-            case "twofly2":     return new TwoFly(2);
-            case "twofly3":     return new TwoFly(3);
-            case "twofly4":     return new TwoFly(4);
+            case "twofly-1":    return new TwoFly(-1, 1);
+            case "twofly2":     return new TwoFly(2, 1);
+            case "twofly3":     return new TwoFly(3, 1);
+            case "twofly4":     return new TwoFly(4, 1);
+            case "twofly4-2":     return new TwoFly(4, 2);
+            case "twofly4-3":     return new TwoFly(4, 3);
+            case "twofly4-4":     return new TwoFly(4, 4);
             default:            return new MineConnectClaimer();
         }
     }
@@ -194,7 +197,7 @@ public class Punter {
             LOG.info("number of own rivers: {}", state.getOwnRivers().size());
             int myScore = scoring.scores.stream().filter(score -> score.punter == punterId).findFirst().get().score;
             int rank = numPunters - (int) scoring.scores.stream().filter(score -> score.score < myScore).count();
-            LOG.info("RANKING {} / {}", rank, numPunters);
+            LOG.info("RANKING {} / {} with {} points", rank, numPunters, myScore);
             scoring.scores.forEach(score -> {
                 int computed = state.getScore(score.punter);
                 if (score.score != computed) {
