@@ -25,35 +25,15 @@ public class Punter {
 
     private static Solver getSolver(String arg) {
         switch (arg) {
-            case "random":      return new RandomClaimer();
-            case "simple":      return new SimpleMineClaimer();
-            case "maxpoint":    return new MaxPointClaimer();
-            case "expanding":   return new ExpandingMineClaimer();
-            case "connect":     return new MineConnectClaimer();
-            case "heuristic":   return new HeuristicSolver();
-            case "future1":     return new FutureConnecter(1);
-            case "future2":     return new FutureConnecter(2);
-            case "future3":     return new FutureConnecter(3);
-            case "future4":     return new FutureConnecter(4);
-            case "back3":       return new FutureBack(3);
-            case "back4":       return new FutureBack(4);
-            case "back5":       return new FutureBack(5);
-            case "back6":       return new FutureBack(6);
-            case "twofly-1":    return new TwoFly(-1, 1);
-            case "twofly2":     return new TwoFly(2, 1);
-            case "twofly3":     return new TwoFly(3, 1);
-            case "twofly4":     return new TwoFly(4, 1);
-            case "twofly4-2":   return new TwoFly(4, 2);
-            case "twofly4-3":   return new TwoFly(4, 3);
-            case "twofly4-4":   return new TwoFly(4, 4);
-            case "twofly-1-2":  return new TwoFly(-1, 2);
-            case "twofly-1-3":  return new TwoFly(-1, 3);
-            case "twofly-1-4":  return new TwoFly(-1, 4);
-            case "twofly5-3":   return new TwoFly(5, 3);
-            case "twofly3-3":   return new TwoFly(3, 3);
-            case "twofly5-5":   return new TwoFly(5, 5);
-            case "splurgefly":  return new SplurgeFly();
-            default:            return new MineConnectClaimer();
+            case "random":          return new RandomClaimer();
+            case "simple":          return new SimpleMineClaimer();
+            case "maxpoint":        return new MaxPointClaimer();
+            case "expanding":       return new ExpandingMineClaimer();
+            case "connect":         return new MineConnectClaimer();
+            case "splurgefly":      return new SplurgeFly();
+            case "splurgefly44":    return new SplurgeFly(4, 4);
+            case "splurgefly53":    return new SplurgeFly(5, 3);
+            default:                return new SplurgeFly();
         }
     }
 

@@ -12,8 +12,23 @@ import java.util.*;
 public class SplurgeFly implements Solver {
 
     private Move bestChoice = null;
+    private final int risk;
+    private final int divider;
+    private final boolean useDefault;
 
     private static final Logger LOG = LoggerFactory.getLogger(SplurgeFly.class);
+
+    public SplurgeFly() {
+        risk = 0;
+        divider = 0;
+        useDefault = true;
+    }
+
+    public SplurgeFly(int risk, int divider) {
+        this.risk = risk;
+        this.divider = divider;
+        useDefault = false;
+    }
 
 
     @Override
@@ -332,7 +347,8 @@ public class SplurgeFly implements Solver {
 
     @Override
     public String getName() {
-        return "Splurge Fly";
+        if (useDefault) return "Splurge Fly";
+        return "Splurge Fly " + risk + "-" + divider;
     }
 
     @Override
@@ -345,6 +361,8 @@ public class SplurgeFly implements Solver {
     }
 
     private int getRisk(GameState state) {
+        if (!useDefault) return risk;
+
         int sites = state.getSites().size();
         int rivers = state.getNumRivers();
         int mines = state.getMines().size();
@@ -368,6 +386,8 @@ public class SplurgeFly implements Solver {
     }
 
     private int getStepDivider(GameState state) {
+        if (!useDefault) return divider;
+
         int sites = state.getSites().size();
         int rivers = state.getNumRivers();
         int mines = state.getMines().size();
