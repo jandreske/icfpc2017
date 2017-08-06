@@ -109,10 +109,10 @@ public class Punter {
 
         try (Socket client = new Socket(server, port)) {
             client.setSoTimeout(SOCKET_TIMEOUT_MS);
-            InputStream input = client.getInputStream();
+            InputStream input = new BufferedInputStream(client.getInputStream());
             OutputStream output = client.getOutputStream();
             punter = new Punter(solver);
-            scoring = punter.runOnlineGame(input, new PrintStream(output));
+            scoring = punter.runOnlineGame(input, new PrintStream(new BufferedOutputStream(output)));
             output.close();
             input.close();
 
