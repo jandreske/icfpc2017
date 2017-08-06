@@ -111,4 +111,10 @@ public interface GameState {
      * Is the given site part of a river claimed by the given punter?
      */
     boolean isOnRiver(int punter, int site);
+
+    boolean areFuturesActive();
+
+    boolean areSplurgesActive();
+
+    int getSplurgeCredits(int punter);
 }

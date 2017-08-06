@@ -3,6 +3,7 @@ package state;
 import io.*;
 
 import java.beans.Transient;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,10 +15,13 @@ class MapBasedGameState implements GameState {
 
     private int numPunters;
 
+    private java.util.Map<Integer, Integer> credits = new HashMap<>();
+
     private Map map;
 
     private GraphMap graphMap;
     private Future[] futures;
+    private Settings settings;
 
     public MapBasedGameState() {}
 
@@ -27,6 +31,7 @@ class MapBasedGameState implements GameState {
         myPunterId = setup.getPunter();
         numPunters = setup.getPunters();
         map = setup.getMap();
+        settings = setup.getSettings();
         graphMap = null;
     }
 
@@ -136,17 +141,29 @@ class MapBasedGameState implements GameState {
         }
         Move.SplurgeData splurge = move.getSplurge();
         if (splurge != null) {
+            int punter = splurge.punter;
+            int cred = credits.getOrDefault(punter, 0) + 1;
             int n = splurge.route.size();
             for (int i = 1; i < n; i++) {
                 River river = getRiver(splurge.route.get(i-1), splurge.route.get(i)).get();
-                if (river.isClaimed() && splurge.punter != myPunterId) {
-                    throw new LogicException("river " + river + " claimed by " + claim.punter + " but already owned by " + river.getOwner());
+                if (river.isClaimed() && punter != myPunterId) {
+                    throw new LogicException("river " + river + " claimed by " + punter + " but already owned by " + river.getOwner());
                 }
                 river.setOwner(splurge.punter);
+                cred--;
             }
+            credits.put(punter, cred);
             //reset score cache
             if (splurge.punter == myPunterId) score = -1;
             return true;
+        }
+        Move.PassData pass = move.getPass();
+        if (pass != null) {
+            //TODO this will give false credits at game start
+            int punter = pass.punter;
+            int cred = credits.getOrDefault(punter, 0);
+            cred++;
+            credits.put(punter, cred);
         }
         return false;
     }
@@ -271,5 +288,20 @@ class MapBasedGameState implements GameState {
     public boolean isOnRiver(int punter, int site) {
         return map.getRivers().stream()
                 .anyMatch(r -> r.getOwner() == punter && r.touches(site));
+    }
+
+    @Override
+    public boolean areFuturesActive() {
+        return settings.getFutures();
+    }
+
+    @Override
+    public boolean areSplurgesActive() {
+        return settings.isSplurges();
+    }
+
+    @Override
+    public int getSplurgeCredits(int punterId) {
+        return credits.get(punterId);
     }
 }

@@ -51,6 +51,7 @@ public class Punter {
             case "twofly-1-3":    return new TwoFly(-1, 3);
             case "twofly-1-4":    return new TwoFly(-1, 4);
             case "twofly5-3":     return new TwoFly(5, 3);
+            case "twofly3-3":     return new TwoFly(3, 3);
             default:            return new MineConnectClaimer();
         }
     }
