@@ -18,6 +18,7 @@ public class ExpandingMineClaimer implements Solver {
         setBestChoice(Move.claim(state.getMyPunterId(), freeRivers.iterator().next()));
 
         for (Integer mine : mines) {
+            if (Thread.currentThread().isInterrupted()) return null;
             Set<River> ownRivers = state.getOwnRiversTouching(mine);
             //if we already have a river at that mine, we dont want another one
             if (ownRivers.size() > 0) continue;

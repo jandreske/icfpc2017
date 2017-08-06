@@ -3,6 +3,7 @@ import groovy.json.JsonSlurper
 import Punter
 
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 jsonSlurper = new JsonSlurper()
 
@@ -77,6 +78,7 @@ def writeJson(PrintStream out, obj) {
 }
 
 executor = Executors.newFixedThreadPool(1)
+executor.setKeepAliveTime(60, TimeUnit.SECONDS)
 
 def startPunter(punter) {
     if (punter.external) {
@@ -266,7 +268,7 @@ executor.shutdown()
 // println "Final claims: ${rivers}"
 punters.each { p ->
     int numRivers = rivers.count { it.owner == p.id }
-    println(String.format("SCOR %2d: %8d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
+    println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
                           p.id, computeScore(p.id), p.moves, 1000 * p.setupTime,
                           1000 * p.moveTime / p.moves, 1000 * p.maxTime,
                           numRivers, p.name))

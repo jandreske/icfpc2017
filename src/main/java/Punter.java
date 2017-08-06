@@ -21,7 +21,7 @@ import java.util.concurrent.*;
 
 public class Punter {
 
-    private static final int TIME_OUT_MS = 650;
+    private static final int TIME_OUT_MS = 500;
     private static final int SOCKET_TIMEOUT_MS = 10 * 60 * 1000;
 
     private static Solver getSolver(String arg) {
@@ -57,7 +57,7 @@ public class Punter {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(Punter.class);
-    private final ExecutorService timeoutExecutorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService timeoutExecutorService;
 
     public static void main(String[] args) {
         boolean online = false;
@@ -84,31 +84,44 @@ public class Punter {
     // for non-forking offline server use
     public static void runOffline(String solver, InputStream in, PrintStream out) throws IOException {
         Punter punter = new Punter(getSolver(solver));
-        punter.runOfflineMove(in, out);
+        try {
+            punter.runOfflineMove(in, out);
+        } finally {
+            punter.timeoutExecutorService.shutdownNow();
+        }
     }
 
     private static void runOfflineRound(Solver solver) {
+        Punter punter = new Punter(solver);
         try {
-            Punter punter = new Punter(solver);
             punter.runOfflineMove(System.in, System.out);
         } catch (IOException e) {
             LOG.error("Unexpected Exception: ", e);
+        } finally {
+            punter.timeoutExecutorService.shutdownNow();
         }
     }
 
     private static void startOnlineGame(String server, int port, Solver solver) {
         Scoring.Data scoring = null;
+        Punter punter = null;
+
         try (Socket client = new Socket(server, port)) {
             client.setSoTimeout(SOCKET_TIMEOUT_MS);
             InputStream input = client.getInputStream();
             OutputStream output = client.getOutputStream();
-            Punter punter = new Punter(solver);
+            punter = new Punter(solver);
             scoring = punter.runOnlineGame(input, new PrintStream(output));
             output.close();
             input.close();
 
         } catch (IOException e) {
             LOG.error("Unexpected Exception: ", e);
+        }
+        finally {
+            if (punter != null) {
+                punter.timeoutExecutorService.shutdownNow();
+            }
         }
 
         LOG.info("SCORE on {}: {}", port, scoring == null ? "FAILED" : scoring);
@@ -119,7 +132,28 @@ public class Punter {
     private final Solver solver;
     private final GameStateFactory gameStateFactory;
 
+    public static class NamedThreadFactory implements ThreadFactory {
+
+        private final String prefix;
+        private volatile int count = 1;
+
+        public NamedThreadFactory(String prefix) {
+            this.prefix = prefix + "-";
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r);
+            t.setName(prefix + count);
+            count++;
+            return t;
+        }
+    }
+
     private Punter(Solver solver) {
+        timeoutExecutorService =
+           new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS, new SynchronousQueue<>());
+        ((ThreadPoolExecutor) timeoutExecutorService).setThreadFactory(new NamedThreadFactory("ASoM-timeout"));
         gameStateFactory = new GameStateFactory();
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -207,7 +241,6 @@ public class Punter {
                 }
             });
             record.println("]}");
-            timeoutExecutorService.shutdown();
             return scoring;
         }
     }
@@ -276,7 +309,6 @@ public class Punter {
             Scoring scoring = (Scoring) req;
             LOG.info("Scoring received: {}", scoring);
         }
-        timeoutExecutorService.shutdown();
     }
 
     private void writeJson(PrintStream out, Object value) throws JsonProcessingException {

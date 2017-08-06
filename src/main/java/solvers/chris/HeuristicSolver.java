@@ -48,6 +48,7 @@ public class HeuristicSolver implements Solver {
 
     private void classifyUnclaimedRivers() {
         for (River river : state.getUnclaimedRivers()) {
+            if (Thread.currentThread().isInterrupted()) return;
             if (isClaimed(river.getSource())) {
                 if (isClaimed(river.getTarget())) {
                     if (!state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) {

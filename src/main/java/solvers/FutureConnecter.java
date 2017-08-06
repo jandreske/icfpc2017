@@ -25,6 +25,7 @@ public class FutureConnecter implements Solver {
         int shortest = Integer.MAX_VALUE;
         if (state.getFutures() != null) {
             for (Future future : state.getFutures()) {
+                if (Thread.currentThread().isInterrupted()) return null;
                 if (state.isFutureComplete(future)) continue;
                 int steps = state.missingStepsForFuture(future);
                 if (steps == -1) continue;

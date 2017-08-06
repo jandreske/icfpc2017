@@ -30,6 +30,7 @@ public class TwoFly implements Solver {
         int shortest = Integer.MAX_VALUE;
         if (state.getFutures() != null) {
             for (Future future : state.getFutures()) {
+                if (Thread.currentThread().isInterrupted()) return null;
                 if (state.isFutureComplete(future)) continue;
                 int steps = state.missingStepsForFuture(future);
                 if (steps == -1) continue;
@@ -55,6 +56,7 @@ public class TwoFly implements Solver {
         List<River> bestPath = null;
         shortest = Integer.MAX_VALUE;
         for (int mineS : mines) {
+            if (Thread.currentThread().isInterrupted()) return null;
             for (int mineT : mines) {
                 if (mineS == mineT) continue;
                 if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
@@ -80,6 +82,7 @@ public class TwoFly implements Solver {
         River best = null;
         int bestPoints = 0;
         for (River river : freeRivers) {
+            if (Thread.currentThread().isInterrupted()) return null;
             boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0)
                     || mines.contains(river.getSource());
             boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0)

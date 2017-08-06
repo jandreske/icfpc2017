@@ -18,6 +18,7 @@ public class SimpleMineClaimer implements Solver {
         Set<River> freeRivers = state.getUnclaimedRivers();
         setBestChoice(Move.claim(state.getMyPunterId(), freeRivers.iterator().next()));
         for (Integer mine : mines) {
+            if (Thread.currentThread().isInterrupted()) return null;
             Set<River> mineRivers = state.getRiversTouching(mine);
             for (River mineRiver : mineRivers) {
                 if (freeRivers.contains(mineRiver)) {

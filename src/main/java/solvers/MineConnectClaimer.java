@@ -21,6 +21,7 @@ public class MineConnectClaimer implements Solver {
 
         for (int mineS : mines) {
             for (int mineT : mines) {
+                if (Thread.currentThread().isInterrupted()) return null;
                 if (mineS == mineT) continue;
                 if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
                 List<River> path = state.getShortestOpenRoute(state.getMyPunterId(), mineS, mineT);
@@ -48,6 +49,7 @@ public class MineConnectClaimer implements Solver {
         River best = null;
         int bestPoints = 0;
         for (River river : freeRivers) {
+            if (Thread.currentThread().isInterrupted()) return null;
             boolean connectedSource = (state.getOwnRiversTouching(river.getSource()).size() > 0);
             boolean connectedTarget = (state.getOwnRiversTouching(river.getTarget()).size() > 0);
 
