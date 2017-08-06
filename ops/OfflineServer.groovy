@@ -1,15 +1,14 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import Punter
+import groovy.transform.CompileStatic
 
 import java.util.concurrent.Executors
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 jsonSlurper = new JsonSlurper()
-
-def countUnclaimed(rivers) {
-    rivers.count { !it.containsKey('owner') }
-}
 
 def claimRiver(claim) {
     rivers.each { r ->
@@ -39,6 +38,7 @@ def claimSplurge(splurge) {
 }
 
 def shorten(s) {
+    // return s
     if (s.length() <= 70) {
         s
     } else {
@@ -77,8 +77,7 @@ def writeJson(PrintStream out, obj) {
     println "SENT ${shorten(json)}"
 }
 
-executor = Executors.newFixedThreadPool(1)
-executor.setKeepAliveTime(60, TimeUnit.SECONDS)
+executor = new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new SynchronousQueue<>())
 
 def startPunter(punter) {
     if (punter.external) {
@@ -136,7 +135,7 @@ def getLastMoves() {
 }
 
 def runMove(punter) {
-    println "### Getting move from punter ${punter.id}..."
+    println "### Getting move from punter ${punter.id} ..."
     def pstate = startPunter(punter)
     def msg1 = readJson(pstate.inp)
     punter.name = msg1.me
@@ -144,6 +143,7 @@ def runMove(punter) {
     def time = System.nanoTime()
     writeJson(pstate.out, [move: [moves: getLastMoves()], state: punter.state])
     def msg2 = readJson(pstate.inp)
+    time = (System.nanoTime() - time) / 1.0e9
     if (msg2.containsKey('claim')) {
         println "CLAIM ${msg2.claim}"
         claimRiver(msg2.claim)
@@ -153,7 +153,6 @@ def runMove(punter) {
     } else {
         println "PASS ${msg2}"
     }
-    time = (System.nanoTime() - time) / 1.0e9
     println(String.format("TIME %.3f seconds", time))
     if (time > 1) {
         println "TIMEOUT in game phase"
@@ -191,7 +190,22 @@ def shortestPath(int a, int b) {
     bfs(a, b, rivers)
 }
 
+def enterTable(Map<Integer, List> table, int node, river) {
+    List e = table.get(node)
+    if (e == null) {
+        e = new ArrayList()
+        table.put(node, e)
+    }
+    e.add(river)
+}
+
 def bfs(int source, int target, rivers) {
+    Map<Integer, List> riversByNode = new HashMap<>()
+    rivers.each { river ->
+        enterTable(riversByNode, river.source, river)
+        enterTable(riversByNode, river.target, river)
+    }
+
     Map<Integer,Integer> visited = new HashMap<>()
     Queue<Integer> queue = new LinkedList<>()
     visited.put(source, -1)
@@ -209,14 +223,16 @@ def bfs(int source, int target, rivers) {
                 node = orig
             }
         }
-        rivers.each { r ->
-            if (r.source == node && !visited.containsKey(r.target)) {
-                queue.addLast(r.target)
-                visited.put(r.target, node)
-            }
-            else if (r.target == node && !visited.containsKey(r.source)) {
-                queue.addLast(r.source)
-                visited.put(r.source, node)
+        List rvs = riversByNode.get(node)
+        if (rvs != null) {
+            rvs.each { r ->
+                if (r.source == node && !visited.containsKey(r.target)) {
+                    queue.addLast(r.target)
+                    visited.put(r.target, node)
+                } else if (!visited.containsKey(r.source)) {
+                    queue.addLast(r.source)
+                    visited.put(r.source, node)
+                }
             }
         }
     }
@@ -252,13 +268,10 @@ punters.eachWithIndex { p,id ->
     println "Punter ${id} initialized: ${p.name}"
 }
 
-for (int move = 0;; move++) {
-    int open = countUnclaimed(rivers)
-    println "### Move: ${move}, unclaimed: ${open}"
-    if (open == 0) {
-        break
-    }
+int nMoves = rivers.size()
+for (int move = 0; move < nMoves; move++) {
     int punter = move % numPunters
+    println "### Move ${move}/${nMoves}"
     runMove(punters[punter])
 }
 executor.shutdown()
