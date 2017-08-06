@@ -181,8 +181,8 @@ public class Punter {
                 }
 
                 Move move = getNextMoveWithTimeout(state, TIME_OUT_MS);
+                if (move == null) move = Move.pass(state.getMyPunterId());
                 writeJson(out, move);
-                state.applyMove(move);
                 Move.ClaimData claim1 = move.getClaim();
                 if (claim1 != null) {
                     record.print(recordSep);
@@ -267,6 +267,7 @@ public class Punter {
             }
             moveRequest.getMove().moves.forEach(state::applyMove);
             Move move = getNextMoveWithTimeout(state, TIME_OUT_MS);
+            if (move == null) move = Move.pass(state.getMyPunterId());
             move.setState(state);
             writeJson(out, move);
             LOG.info("Move and new state: {}", move);
