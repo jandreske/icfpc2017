@@ -1,24 +1,31 @@
 package io;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import state.LogicException;
 
 import java.beans.Transient;
 
 /**
  * River, augmented by owner id (-1 if unclaimed).
+ * Rivers are normalized so that the source site id is always <= the target site id.
  */
 public class River {
 
-    private int source;
-    private int target;
+    private final int source;
+    private final int target;
 
     private int owner = -1;
 
-    public River() {}
-
-    public River(int source, int target) {
-        this.source = source;
-        this.target = target;
+    @JsonCreator
+    public River(@JsonProperty("source") int source, @JsonProperty("target") int target) {
+        if (source <= target) {
+            this.source = source;
+            this.target = target;
+        } else {
+            this.source = target;
+            this.target = source;
+        }
     }
 
     public int getSource() {
@@ -52,20 +59,16 @@ public class River {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof River)) {
+            return false;
+        }
         River river = (River) o;
-
-        if (source != river.source) return false;
-        return target == river.target;
+        return source == river.source && target == river.target;
     }
 
     @Override
     public int hashCode() {
-        int result = source;
-        result = 31 * result + target;
-        return result;
+        return 31 * source + target;
     }
 
     public int getOpposite(Integer site) {
