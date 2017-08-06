@@ -52,6 +52,7 @@ class MapBasedGameState implements GameState {
         return numPunters;
     }
 
+    @Transient
     @Override
     public int getNumRivers() {
         return map.getRivers().size();
@@ -93,16 +94,10 @@ class MapBasedGameState implements GameState {
     }
 
     @Override
-    public long getDegree(int siteId) {
-        return map.getRivers().stream()
+    public int getDegree(int siteId) {
+        return (int) map.getRivers().stream()
                 .filter(r -> r.touches(siteId))
                 .count();
-    }
-
-    @Override
-    @Transient
-    public Set<River> getOwnRivers() {
-        return getRiversByOwner(myPunterId);
     }
 
     @Override
@@ -180,8 +175,7 @@ class MapBasedGameState implements GameState {
                 .sum();
     }
 
-    @Override
-    public int getScore(GraphMap punterMap) {
+    private int getScore(GraphMap punterMap) {
         return map.getMines().stream()
                 .mapToInt(mine -> getScore(punterMap, mine))
                 .sum();
@@ -231,26 +225,6 @@ class MapBasedGameState implements GameState {
         GraphMap newMap = new GraphMap(getSites(), rivers);
         int newScore = getScore(newMap);
         return newScore - score;
-    }
-
-    // API ideas: best candidate rivers, considering already taken ones
-    @Override
-    @Transient
-    public List<River> getMostPromisingRivers() {
-        Set<River> ownOrUnclaimed = map.getRivers().stream()
-                .filter(r -> r.getOwner() == myPunterId || !r.isClaimed())
-                .collect(Collectors.toSet());
-        GraphMap graph = new GraphMap(getSites(), ownOrUnclaimed);
-        // TODO
-        return null;
-    }
-
-    /**
-     * Is the given site a mine?
-     */
-    @Override
-    public boolean isMine(int siteId) {
-        return map.getMines().contains(siteId);
     }
 
     @Transient

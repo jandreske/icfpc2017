@@ -24,6 +24,24 @@ def claimRiver(claim) {
     }
 }
 
+def claimSplurge(splurge) {
+    def claim = [punter: splurge.punter, source: 0, target: 0]
+    int n = splurge.route.size()
+    for (int i = 1; i < n; i++) {
+        claim.source = splurge.route.get(i-1)
+        claim.target = splurge.route.get(i)
+        claimRiver(claim)
+    }
+}
+
+def shorten(s) {
+    if (s.length() <= 70) {
+        s
+    } else {
+        s[0..57] + "  #####  " + s[-5..-1]
+    }
+}
+
 def readJson(InputStream inp) {
     int len = 0
     for (;;) {
@@ -41,7 +59,7 @@ def readJson(InputStream inp) {
         }
         n += m;
     }
-    // println "RECEIVED ${new String(data)}"
+    println "RECV ${shorten(new String(data))}"
     return jsonSlurper.parse(data)
 }
 
@@ -52,12 +70,12 @@ def writeJson(PrintStream out, obj) {
     out.write(':' as char)
     out.print(json)
     out.flush()
-    // println "SENT ${json}"
+    println "SENT ${shorten(json)}"
 }
 
 def runSetup(punter, id) {
     punter.id = id
-    println "Setting up punter ${punter}..."
+    println "SETUP ${punter} ..."
     def process = new ProcessBuilder(punter.command)
                         .start()
     def inp = process.getIn()
@@ -65,18 +83,19 @@ def runSetup(punter, id) {
     punter.name = msg1.me
     def out = new PrintStream(process.getOut())
     writeJson(out, [you: punter.name])
-    long time = System.nanoTime()
-    writeJson(out, [punter: punter.id, punters: numPunters, map: map])
+    def time = System.nanoTime()
+    writeJson(out, [punter: punter.id, punters: numPunters, map: map, settings: [futures: true, splurges: true]])
     def msg2 = readJson(inp)
     punter.state = msg2.state
-    time = System.nanoTime() - time
-    println(String.format("Time: %.1f seconds", time / 1.0e9))
-    if (time > 1.0e10) {
+    time = (System.nanoTime() - time) / 1.0e9;
+    println(String.format("TIME %.3f seconds", time))
+    if (time > 10) {
         println "TIMEOUT in setup phase"
         System.exit(0)
     }
     process.waitFor()
     punter.lastMove = [pass: [punter: punter.id]]
+    punter.setupTime = time
 }
 
 def getLastMoves() {
@@ -84,7 +103,7 @@ def getLastMoves() {
 }
 
 def runMove(punter) {
-    println "Getting move from punter ${punter.id}..."
+    println "### Getting move from punter ${punter.id}..."
     def process = new ProcessBuilder(punter.command)
             .start()
     def inp = process.getIn()
@@ -92,20 +111,28 @@ def runMove(punter) {
     punter.name = msg1.me
     def out = new PrintStream(process.getOut())
     writeJson(out, [you: punter.name])
-    long time = System.nanoTime()
+    def time = System.nanoTime()
     writeJson(out, [move: [moves: getLastMoves()], state: punter.state])
     def msg2 = readJson(inp)
     if (msg2.containsKey('claim')) {
-        println "claim: ${msg2.claim}"
+        println "CLAIM ${msg2.claim}"
         claimRiver(msg2.claim)
+    } else if (msg2.containsKey('splurge')) {
+        println "SPLURGE ${msg2.splurge}"
+        claimSplurge(msg2.splurge)
     } else {
-        println "pass: ${msg2}"
+        println "PASS ${msg2}"
     }
-    time = System.nanoTime() - time
-    println(String.format("Time: %.1f seconds", time / 1.0e9))
-    if (time > 1.0e9) {
+    time = (System.nanoTime() - time) / 1.0e9
+    println(String.format("TIME %.3f seconds", time))
+    if (time > 1) {
         println "TIMEOUT in game phase"
         System.exit(0)
+    }
+    punter.moveTime += time
+    punter.moves++
+    if (time > punter.maxTime) {
+        punter.maxTime = time
     }
     punter.state = msg2.state
     msg2.remove('state')
@@ -174,7 +201,7 @@ if (args.length < 3) {
     System.exit(1)
 }
 String mapFile = args[0]
-punters = args[1..-1].collect { p -> [command: p] }
+punters = args[1..-1].collect { p -> [command: p, moves: 0, moveTime: 0.0] }
 numPunters = punters.size()
 
 println "Map: ${mapFile}"
@@ -185,7 +212,7 @@ map = jsonSlurper.parse(new File(mapFile))
 rivers = jsonSlurper.parse(new File(mapFile)).rivers
 
 println "Map: ${map.sites.size()} sites, ${rivers.size()} rivers, ${map.mines.size()} mines."
-
+println "Site id range: ${map.sites.collect({it.id}).min()}-${map.sites.collect({it.id}).max()}"
 
 punters.eachWithIndex { p,id ->
     runSetup(p,id)
@@ -194,7 +221,7 @@ punters.eachWithIndex { p,id ->
 
 for (int move = 0;; move++) {
     int open = countUnclaimed(rivers)
-    println "Move ${move}, unclaimed: ${open}"
+    println "### Move: ${move}, unclaimed: ${open}"
     if (open == 0) {
         break
     }
@@ -207,5 +234,8 @@ for (int move = 0;; move++) {
 // println "Final claims: ${rivers}"
 punters.each { p ->
     int numRivers = rivers.count { it.owner == p.id }
-    println "Score ${p.id}, ${p.name}: ${computeScore(p.id)} (rivers: ${numRivers})"
+    println(String.format("SCOR %2d: %8d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
+                          p.id, computeScore(p.id), p.moves, 1000 * p.setupTime,
+                          1000 * p.moveTime / p.moves, 1000 * p.maxTime,
+                          numRivers, p.name))
 }
