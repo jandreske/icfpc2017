@@ -20,13 +20,18 @@ public class GameStateTests {
     @Before
     public void setup() {
         Set<Site> sites = IntStream.range(0, 5).mapToObj(i -> new Site(i)).collect(Collectors.toSet());
-        Set<River> rivers = Stream.of(
+        River[] riversA = new River[]{
                 new River(0,1),
                 new River(1,3),
                 new River(3,4),
                 new River(0,2),
                 new River(2,4),
-                new River(0,4))
+                new River(0,4)
+        };
+        riversA[0].setOwner(1);
+        riversA[1].setOwner(1);
+        riversA[2].setOwner(1);
+        Set<River> rivers = Stream.of(riversA)
             .collect(Collectors.toSet());
         Set<Integer> mines = Collections.singleton(4);
         Map map = new Map(sites, rivers, mines);
@@ -35,9 +40,6 @@ public class GameStateTests {
         setup.setPunters(2);
         setup.setMap(map);
         state = new MapBasedGameState(setup);
-        state.getRiver(0,1).get().setOwner(1);
-        state.getRiver(1,3).get().setOwner(1);
-        state.getRiver(3,4).get().setOwner(1);
     }
 
     @Test

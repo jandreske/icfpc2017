@@ -60,6 +60,11 @@ public interface GameState {
 
     Set<River> getUnclaimedRivers();
 
+    /**
+     * Get rivers we could buy an option for.
+     */
+    Set<River> getAvailableOptions();
+
     Set<River> getRiversTouching(int siteId);
 
     default Set<River> getUnclaimedRiversTouching(int siteId) {
@@ -80,15 +85,9 @@ public interface GameState {
     }
 
     /**
-     * Get the set of rivers claimed by the given punter.
+     * Get the set of rivers claimed or optioned by the given punter.
      */
     Set<River> getRiversByOwner(int punter);
-
-    /**
-     * Find a river with the given end sites.
-     * The order of source and target does not matter.
-     */
-    Optional<River> getRiver(int source, int target);
 
     /**
      * Apply a move to the game state.

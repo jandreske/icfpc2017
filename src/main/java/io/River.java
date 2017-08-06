@@ -90,4 +90,18 @@ public class River {
         if (site == target) return source;
         throw new LogicException("Cannot get opposite from site not touching river");
     }
+
+    /**
+     * Can the given punter buy the option for this river?
+     */
+    public boolean canOption(int punter) {
+        return option < 0 && owner >= 0 && owner != punter;
+    }
+
+    /**
+     * Has the given punter claimed or optioned this river?
+     */
+    public boolean canUse(int punter) {
+        return owner == punter || option == punter;
+    }
 }

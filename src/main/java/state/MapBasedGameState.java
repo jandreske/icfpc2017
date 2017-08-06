@@ -108,6 +108,15 @@ class MapBasedGameState implements GameState {
 
     @Override
     @Transient
+    public Set<River> getAvailableOptions() {
+        int punter = getMyPunterId();
+        return getRivers().stream()
+                .filter(r -> r.canOption(punter))
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    @Transient
     public Set<River> getUnclaimedRivers() {
         return getRivers().stream()
                 .filter(r -> !r.isClaimed())
@@ -131,7 +140,7 @@ class MapBasedGameState implements GameState {
     @Override
     public Set<River> getOwnRiversTouching(int siteId) {
         return getRivers().stream()
-                .filter(r -> r.getOwner() == myPunterId && r.touches(siteId))
+                .filter(r -> r.canUse(myPunterId) && r.touches(siteId))
                 .collect(Collectors.toSet());
     }
 
@@ -145,12 +154,15 @@ class MapBasedGameState implements GameState {
     @Override
     public Set<River> getRiversByOwner(int punter) {
         return getRivers().stream()
-                .filter(r -> r.getOwner() == punter)
+                .filter(r -> r.canUse(punter))
                 .collect(Collectors.toSet());
     }
 
-    @Override
-    public Optional<River> getRiver(int source, int target) {
+    /**
+     * Find a river with the given end sites.
+     * The order of source and target does not matter.
+     */
+    private Optional<River> getRiver(int source, int target) {
         return getRivers().stream()
                 .filter(r -> (r.getSource() == source && r.getTarget() == target)
                           || (r.getSource() == target && r.getTarget() == source))
@@ -222,7 +234,7 @@ class MapBasedGameState implements GameState {
     }
 
     private boolean takeOption(River river, int punter) {
-        if (river.getOption() < 0 && river.getOwner() >= 0 && river.getOwner() != punter) {
+        if (river.canOption(punter)) {
             river.setOption(punter);
             if (punter == myPunterId) optionsUsed++;
             return true;
@@ -287,7 +299,7 @@ class MapBasedGameState implements GameState {
     @Override
     public List<River> getShortestOpenRoute(int punterId, int site1, int site2) {
         Set<River> rivers = getRivers().stream()
-                .filter(r -> r.getOwner() == punterId || !r.isClaimed())
+                .filter(r -> r.canUse(punterId) || !r.isClaimed())
                 .collect(Collectors.toSet());
         GraphMap punterMap = new GraphMap(getSites(), rivers);
         return punterMap.getShortestRoute(site1, site2);
@@ -359,12 +371,12 @@ class MapBasedGameState implements GameState {
     }
     
     /**
-     * Ist this site the source or target of any river claimed by the punter?
+     * Ist this site the source or target of any river usable by the punter?
      */
     @Override
     public boolean isOnRiver(int punter, int site) {
         return getRivers().stream()
-                .anyMatch(r -> r.getOwner() == punter && r.touches(site));
+                .anyMatch(r -> r.canUse(punter) && r.touches(site));
     }
 
     @Override
