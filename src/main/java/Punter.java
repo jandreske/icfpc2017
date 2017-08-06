@@ -265,7 +265,6 @@ public class Punter {
             River claim = getNextMoveWithTimeout(state, TIME_OUT_MS);
             Move move = (claim == null) ? Move.pass(state.getMyPunterId())
                     : Move.claim(state.getMyPunterId(), claim);
-            state.applyMove(move);
             move.setState(state);
             writeJson(out, move);
             LOG.info("Move and new state: {}", move);
