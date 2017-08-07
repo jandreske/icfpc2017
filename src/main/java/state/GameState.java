@@ -70,6 +70,8 @@ public interface GameState {
         return getRiversTouching(siteId).stream().filter(r -> !r.isClaimed()).collect(Collectors.toSet());
     }
 
+    Set<River> getOpenRiversTouching(int siteId);
+
     default Set<River> getOwnRiversTouching(int siteId) {
         return getOwnRivers().stream().filter(r -> r.touches(siteId)).collect(Collectors.toSet());
     }

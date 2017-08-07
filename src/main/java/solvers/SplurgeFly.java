@@ -33,6 +33,7 @@ public class SplurgeFly implements Solver {
 
     @Override
     public Move getNextMove(GameState state) {
+        LOG.info("OPTIONS left: {}", state.getRemainingOptions());
         Move move = getMove(state);
         setBestChoice(move);
         if (move.getClaim() != null
@@ -47,8 +48,8 @@ public class SplurgeFly implements Solver {
     private Move turnIntoSplurge(GameState state, Move move) {
         River river = new River(move.getClaim().source, move.getClaim().target);
         Set<River> candidates = new HashSet<>();
-        candidates.addAll(state.getUnclaimedRiversTouching(river.getSource()));
-        candidates.addAll(state.getUnclaimedRiversTouching(river.getTarget()));
+        candidates.addAll(state.getOpenRiversTouching(river.getSource()));
+        candidates.addAll(state.getOpenRiversTouching(river.getTarget()));
         candidates.remove(river);
         if (candidates.isEmpty()) return move;
         River best = null;
@@ -138,10 +139,33 @@ public class SplurgeFly implements Solver {
         return null;
     }
 
+    private static class IntPair {
+        public int first;
+        public int second;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            IntPair intPair = (IntPair) o;
+
+            if (first != intPair.first) return false;
+            return second == intPair.second;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = first;
+            result = 31 * result + second;
+            return result;
+        }
+    }
+
     private Move getMineConnectionStep(GameState state, Set<Integer> mines) {
         if (state.areSplurgesActive()) {
             int credit = state.getSplurgeCredits(state.getMyPunterId());
-            java.util.Map<River, Integer> canClaimNow = new HashMap<>(); // not really a river, just two sites
+            java.util.Map<IntPair, Integer> canClaimNow = new HashMap<>(); // not really a river, just two sites
             boolean canClaimAtOnceLater = false;
 
             for (int mineS : mines) {
@@ -151,10 +175,14 @@ public class SplurgeFly implements Solver {
                     if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
                     List<River> path = state.getShortestOpenRoute(state.getMyPunterId(), mineS, mineT);
                     if (path.isEmpty()) continue;
-                    int missing = (int) path.stream().filter(river -> !river.isClaimed()).count();
+                    int missing = (int) path.stream().filter(river -> !river.isClaimed()
+                            || (state.areOptionsActive() && river.canOption(state.getMyPunterId()))).count();
                     if (hasSingleOpenFragment(state, mineS, mineT)) {
                         if (missing <= credit + 1) {
-                            canClaimNow.put(new River(mineS, mineT), missing);
+                            IntPair pair = new IntPair();
+                            pair.first = mineS;
+                            pair.second = mineT;
+                            canClaimNow.put(pair, missing);
                         } else {
                             canClaimAtOnceLater = true;
                         }
@@ -163,8 +191,9 @@ public class SplurgeFly implements Solver {
             }
             //if we can claim an entire path now, lets take the longest and do it
             if (!canClaimNow.isEmpty()) {
-                River longest = Collections.max(canClaimNow.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-                return getSplurge(state, longest.getSource(), longest.getTarget());
+                IntPair longest = Collections.max(canClaimNow.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+                LOG.info("Claim path between mines from {} to {}", longest.first, longest.second);
+                return getSplurge(state, longest.first, longest.second);
             }
             //if we can claim an entire future later, lets wait and get splurge credits unless we are running out of time
             if (canClaimAtOnceLater && enoughMovesLeft(state)) return Move.pass(state.getMyPunterId());
@@ -221,6 +250,7 @@ public class SplurgeFly implements Solver {
                 //if we can claim an entire future now, lets take the longest and do it
                 if (canClaimNow.size() > 0) {
                     Future longest = Collections.max(canClaimNow.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+                    LOG.info("Claim future from {} to {}", longest.getSource(), longest.getTarget());
                     return getSplurge(state, longest.getSource(), longest.getTarget());
                 }
                 //if we can claim an entire future later, lets wait and get splurge credits
@@ -260,13 +290,18 @@ public class SplurgeFly implements Solver {
         int target;
         for (River river : state.getShortestOpenRoute(state.getMyPunterId() ,sourceSite, targetSite)) {
             target = river.getOpposite(source);
-            if (!river.isClaimed()) {
+            if (!river.isClaimed() || (state.areOptionsActive() && river.canOption(state.getMyPunterId()))) {
                 if (sites.isEmpty()) sites.add(source);
                 sites.add(target);
+            } else {
+                break;
             }
             source = target;
         }
-        return Move.splurge(state.getMyPunterId(), sites);
+        if (sites.size() > 1) {
+            return Move.splurge(state.getMyPunterId(), sites);
+        }
+        return null;
     }
 
     private boolean hasSingleOpenFragment(GameState state, int source, int target) {
@@ -275,11 +310,11 @@ public class SplurgeFly implements Solver {
         boolean endFound = false;
         for (River river : path) {
             if (!startFound) {
-                startFound = !river.isClaimed();
+                startFound = !river.isClaimed() || (state.areOptionsActive() && river.canOption(state.getMyPunterId()));
             } else if (!endFound) {
-                endFound = river.isClaimed();
+                endFound = river.isClaimed() && (!state.areOptionsActive() || !river.canOption(state.getMyPunterId()));
             } else {
-                if (!river.isClaimed()) return false;
+                if (!river.isClaimed() || (state.areOptionsActive() && river.canOption(state.getMyPunterId()))) return false;
             }
         }
         return startFound;
@@ -289,7 +324,7 @@ public class SplurgeFly implements Solver {
         if (mines.size() == 1) {
             int mine = mines.iterator().next();
             if (state.getOwnRiversTouching(mine).size() < 10) {
-                Set<River> rivers = state.getUnclaimedRiversTouching(mine);
+                Set<River> rivers = state.getOpenRiversTouching(mine);
                 if (!rivers.isEmpty()) {
                     return Move.claim(state.getMyPunterId(), rivers.iterator().next());
                 }

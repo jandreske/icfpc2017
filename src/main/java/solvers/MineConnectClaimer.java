@@ -28,7 +28,9 @@ public class MineConnectClaimer implements Solver {
                 River best = null;
                 int score = 0;
                 for (River river : path) {
-                    if (!river.isClaimed()) {
+                    if (!river.isClaimed() || (state.areOptionsActive()
+                            && state.getRemainingOptions() > 0
+                            && river.canOption(state.getMyPunterId()))) {
                         int myScore = 1;
                         if (mines.contains(river.getSource())) myScore += 100;
                         if (mines.contains(river.getTarget())) myScore += 100;
@@ -37,7 +39,12 @@ public class MineConnectClaimer implements Solver {
                         if (myScore > score) {
                             best = river;
                             score = myScore;
-                            setBestChoice(Move.claim(state.getMyPunterId(), river));
+                            if (river.isClaimed()) {
+                                setBestChoice(Move.option(state.getMyPunterId(), river));
+                            } else {
+                                setBestChoice(Move.claim(state.getMyPunterId(), river));
+                            }
+
                         }
                     }
                 }

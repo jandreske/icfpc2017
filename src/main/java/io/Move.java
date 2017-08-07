@@ -3,7 +3,6 @@ package io;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import state.GameState;
 
-import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -54,7 +53,18 @@ public class Move {
         }
     }
 
+    public static Move option(int punter, River river) {
+        ClaimData option = new ClaimData();
+        option.punter = punter;
+        option.source = river.getSource();
+        option.target = river.getTarget();
+        Move move = new Move();
+        move.option = option;
+        return move;
+    }
+
     public static Move claim(int punter, River river) {
+        if (river.isClaimed()) return option(punter, river);
         ClaimData claim = new ClaimData();
         claim.punter = punter;
         claim.source = river.getSource();

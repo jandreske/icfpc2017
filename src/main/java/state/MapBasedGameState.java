@@ -1,6 +1,9 @@
 package state;
 
 import io.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import solvers.SplurgeFly;
 
 import java.beans.Transient;
 import java.util.HashMap;
@@ -14,6 +17,7 @@ import java.util.stream.Collectors;
  * Does not store precomputed information.
  */
 class MapBasedGameState implements GameState {
+    private static final Logger LOG = LoggerFactory.getLogger(MapBasedGameState.class);
 
     private int myPunterId;
 
@@ -142,6 +146,14 @@ class MapBasedGameState implements GameState {
     public Set<River> getUnclaimedRiversTouching(int siteId) {
         return getRivers().stream()
                 .filter(r -> r.touches(siteId) && !r.isClaimed())
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<River> getOpenRiversTouching(int siteId) {
+        if (!areOptionsActive() || getRemainingOptions() == 0) return getUnclaimedRiversTouching(siteId);
+        return getRivers().stream()
+                .filter(r -> r.touches(siteId) && (!r.isClaimed() || r.canOption(myPunterId)))
                 .collect(Collectors.toSet());
     }
 
@@ -301,6 +313,16 @@ class MapBasedGameState implements GameState {
 
     @Override
     public List<River> getShortestOpenRoute(int punterId, int site1, int site2) {
+        if (settings != null && settings.isOptions() && this.getRemainingOptions() > 0) {
+            List<River> rivers = getRivers().stream()
+                    .filter(r -> r.canUse(punterId) || !r.isClaimed() || r.canOption(punterId))
+                    .collect(Collectors.toList());
+            GraphMap punterMap = new GraphMap(getSites(), rivers);
+            List<River> path = punterMap.getShortestRoute(site1, site2);
+            if (path.stream().filter(river -> river.isClaimed() && river.canOption(punterId)).count() <= this.getRemainingOptions()) {
+                return path;
+            }
+        }
         List<River> rivers = getRivers().stream()
                 .filter(r -> r.canUse(punterId) || !r.isClaimed())
                 .collect(Collectors.toList());
@@ -361,18 +383,19 @@ class MapBasedGameState implements GameState {
     public int missingStepsForFuture(Future future) {
         List<River> path = getShortestOpenRoute(myPunterId, future.getSource(), future.getTarget());
         if (path.isEmpty()) return -1;
-        return (int) path.stream().filter(river -> !river.isClaimed()).count();
+        return (int) path.stream().filter(river -> !river.isClaimed()
+                || (areOptionsActive() && river.canOption(myPunterId))).count();
     }
 
     @Override
     public River nextStepForFuture(Future future) {
         List<River> path = getShortestOpenRoute(myPunterId, future.getSource(), future.getTarget());
         for (River river : path) {
-            if (!river.isClaimed()) return river;
+            if (!river.isClaimed() || (areOptionsActive() && river.canOption(myPunterId))) return river;
         }
         return null;
     }
-    
+
     /**
      * Ist this site the source or target of any river usable by the punter?
      */
