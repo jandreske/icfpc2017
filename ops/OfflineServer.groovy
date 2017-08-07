@@ -14,14 +14,15 @@ def claimRiver(claim) {
     rivers.each { r ->
         if ((r.source == claim.source && r.target == claim.target)
             || (r.source == claim.target && r.target == claim.source)) {
-            if (r.owner >= 0) {
-                if (r.owner == claim.punter) {
-                    println "Redundant claim!"
-                }
+            if (r.owner < 0) {
+                r.owner = claim.punter
+            }
+            else if (r.option >= 0 || r.owner == claim.punter) {
                 println "Error: river already claimed by ${r.owner}"
                 System.exit(1)
-            } else {
-                r.owner = claim.punter
+            }
+            else {
+                r.option = claim.punter
             }
         }
     }
@@ -77,7 +78,10 @@ def writeJson(PrintStream out, obj) {
     println "SENT ${shorten(json)}"
 }
 
-executor = new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new SynchronousQueue<>())
+executor = // new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new SynchronousQueue<>())
+        Executors.newFixedThreadPool(1)
+
+PIPE_SIZE = 16384
 
 def startPunter(punter) {
     if (punter.external) {
@@ -88,8 +92,8 @@ def startPunter(punter) {
         ]
     } else {
         PipedOutputStream out = new PipedOutputStream()
-        PipedInputStream inp = new PipedInputStream(out)
-        PipedInputStream in2 = new PipedInputStream()
+        PipedInputStream inp = new PipedInputStream(out, PIPE_SIZE)
+        PipedInputStream in2 = new PipedInputStream(PIPE_SIZE)
         [ inp: inp,
           out: new PrintStream(new PipedOutputStream(in2)),
           task: executor.submit {Punter.runOffline(punter.command, in2, new PrintStream(out))}
@@ -150,8 +154,10 @@ def runMove(punter) {
     } else if (msg2.containsKey('splurge')) {
         println "SPLURGE ${msg2.splurge}"
         claimSplurge(msg2.splurge)
+    } else if (msg2.containsKey('option')) {
+        claimRiver(msg2.option)
     } else {
-        println "PASS ${msg2}"
+        println "PASS ${msg2.pass}"
     }
     println(String.format("TIME %.3f seconds", time))
     if (time > 1) {
@@ -279,10 +285,13 @@ executor.shutdown()
 // sending stop seems unnecessary
 
 // println "Final claims: ${rivers}"
+double totalTime = 0.0
 punters.each { p ->
     int numRivers = rivers.count { it.owner == p.id }
     println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
                           p.id, computeScore(p.id), p.moves, 1000 * p.setupTime,
                           1000 * p.moveTime / p.moves, 1000 * p.maxTime,
                           numRivers, p.name))
+    totalTime += p.moveTime
 }
+println(String.format("Total move time: %.3f seconds", totalTime))
