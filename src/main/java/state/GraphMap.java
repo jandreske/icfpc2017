@@ -29,16 +29,23 @@ class GraphMap {
     }
 
     boolean hasRoute(int a, int b) {
-        return containsSite(a) && containsSite(b) && getShortestPath(a, b) != null;
+        return getShortestPath(a, b) != null;
     }
 
     boolean containsSite(int site) {
         return bfs.containsVertex(site);
     }
 
+    ArrayNatMap<Integer> getAllShortestRouteLengths(int source) {
+        return bfs.getAllShortestPathLengths(source);
+    }
+
     private List<River> getShortestPath(int a, int b) {
         if (a == b) {
             return Collections.emptyList();
+        }
+        if (!(containsSite(a) && containsSite(b))) {
+            return null;
         }
         River key = new River(a,b); // NOT a river
         List<River> path = cache.get(key);

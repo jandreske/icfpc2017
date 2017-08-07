@@ -64,4 +64,25 @@ public class GameStateTests {
     public void score() {
         Assert.assertEquals(6, state.getScore(1));
     }
+
+    @Test
+    public void allRouteLengths3() {
+        GraphMap map = ((MapBasedGameState) state).getGraphMap();
+
+        ArrayNatMap<Integer> r = map.getAllShortestRouteLengths(3);
+        Assert.assertEquals(5, r.size());
+        Assert.assertEquals(0, (int) r.get(3));
+        Assert.assertEquals(2, (int) r.get(0));
+        Assert.assertEquals(1, (int) r.get(1));
+        Assert.assertEquals(2, (int) r.get(2));
+        Assert.assertEquals(1, (int) r.get(4));
+
+        r = map.getAllShortestRouteLengths(4);
+        Assert.assertEquals(5, r.size());
+        Assert.assertEquals(0, (int) r.get(4));
+        Assert.assertEquals(1, (int) r.get(0));
+        Assert.assertEquals(2, (int) r.get(1));
+        Assert.assertEquals(1, (int) r.get(2));
+        Assert.assertEquals(1, (int) r.get(3));
+    }
 }

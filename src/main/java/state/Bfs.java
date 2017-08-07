@@ -75,11 +75,33 @@ public class Bfs {
         return null;
     }
 
-    public Map<Integer, Integer> getAllShortestPathLengths(int source) {
-        Map<Integer, Integer> result = new HashMap<>();
+    public ArrayNatMap<Integer> getAllShortestPathLengths(int source) {
+        ArrayNatMap<Integer> result = new ArrayNatMap<>(maxVertex + 1);
+        IntQueue queue = new IntQueue(24);
+        int dist = 0;
+        enqueue(result, queue, source, dist);
+        while (!queue.isEmpty()) {
+            dist++;
+            int node = queue.removeFirst();
+            List<River> edges = edgesByVertex.get(node);
+            if (edges != null) {
+                for (River r : edges) {
+                    if (r.getSource() == node && !result.containsKey(r.getTarget())) {
+                        enqueue(result, queue, r.getTarget(), dist);
+                    } else if (!result.containsKey(r.getSource())) {
+                        enqueue(result, queue, r.getSource(), dist);
+                    }
+                }
+            }
+        }
         return result;
     }
 
+
+    private static void enqueue(ArrayNatMap<Integer> visited, IntQueue queue, int node, int dist) {
+        visited.put(node, dist);
+        queue.addLast(node);
+    }
 
 
     private static void enqueue(ArrayNatMap<River> visited, IntQueue queue, int node, River edge) {

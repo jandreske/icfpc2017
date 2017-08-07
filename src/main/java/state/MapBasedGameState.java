@@ -2,7 +2,6 @@ package state;
 
 import io.*;
 
-import javax.annotation.Nonnull;
 import java.beans.Transient;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +53,7 @@ class MapBasedGameState implements GameState {
     }
 
     @Transient
-    private GraphMap getGraphMap() {
+    GraphMap getGraphMap() {
         if (graphMap == null) {
             graphMap = new GraphMap(getSites(), getRivers());
         }
@@ -269,9 +268,11 @@ class MapBasedGameState implements GameState {
         int score = 0;
         for (int mine : getMines()) {
             if (map.containsSite(mine)) {
+                ArrayNatMap<Integer> reach = map.getAllShortestRouteLengths(mine);
+                ArrayNatMap<Integer> dists = getGraphMap().getAllShortestRouteLengths(mine);
                 for (int site : getSites()) {
-                    if (site != mine && map.hasRoute(mine, site)) {
-                        int shortest = getShortestRouteLength(mine, site);
+                    if (site != mine && reach.containsKey(site)) {
+                        int shortest = dists.get(site);
                         score += shortest * shortest;
                     }
                 }
