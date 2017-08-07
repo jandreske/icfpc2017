@@ -195,7 +195,7 @@ def computeScore(int punter) {
 }
 
 def pathOnOwnRivers(int punter, int a, int b) {
-    bfs(a, b, rivers.findAll { r -> r.owner == punter }) >= 0
+    bfs(a, b, rivers.findAll { r -> r.owner == punter || r.option == punter }) >= 0
 }
 
 def shortestPath(int a, int b) {
@@ -293,7 +293,7 @@ executor.shutdown()
 // println "Final claims: ${rivers}"
 double totalTime = 0.0
 punters.each { p ->
-    int numRivers = rivers.count { it.owner == p.id }
+    int numRivers = rivers.count { it.owner == p.id || it.option == p.id }
     println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
                           p.id, computeScore(p.id), p.moves, 1000 * p.setupTime,
                           1000 * p.moveTime / p.moves, 1000 * p.maxTime,
