@@ -4,6 +4,9 @@ import io.River;
 
 import java.util.*;
 
+/**
+ * Find shortest paths using breadth-first-search.
+ */
 public class Bfs {
 
     private static final River SENTINEL = new River(-1,-1);
@@ -45,6 +48,11 @@ public class Bfs {
         return vertices.get(vertex);
     }
 
+    /**
+     * Find the shortest path from source to target, in order from source.
+     * Returns null if there is no path between source and target,
+     * and the empty list if source and target are identical.
+     */
     public List<River> getShortestPath(int source, int target) {
         if (source == target) {
             return Collections.emptyList();
@@ -75,6 +83,10 @@ public class Bfs {
         return null;
     }
 
+    /**
+     * Find the distance to all vertices reachable from source.
+     * The source is included in the returned map with a value of 0.
+     */
     public ArrayNatMap<Integer> getAllShortestPathLengths(int source) {
         ArrayNatMap<Integer> result = new ArrayNatMap<>(maxVertex + 1);
         IntQueue queue = new IntQueue(24);

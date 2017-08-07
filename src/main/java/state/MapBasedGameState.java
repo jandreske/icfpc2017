@@ -9,6 +9,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Game state with roughly the same representation as in the setup message.
+ * Does not store precomputed information.
+ */
 class MapBasedGameState implements GameState {
 
     private int myPunterId;

@@ -2,6 +2,9 @@ package state;
 
 import java.util.NoSuchElementException;
 
+/**
+ * Array based FIFO queue for int values.
+ */
 public class IntQueue {
 
     private int[] values;

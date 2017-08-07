@@ -9,6 +9,7 @@ import io.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import solvers.*;
+import solvers.chris.HeuristicSolver;
 import state.GameState;
 import state.GameStateFactory;
 
@@ -17,8 +18,15 @@ import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.*;
 
+/**
+ * Main class.
+ *
+ * If called without arguments, it runs in offline mode with the default solver.
+ */
 public class Punter {
 
+    // 1 second timeout. We need a large safety margin because we can't really interrupt
+    // threads, so use 500ms
     private static final int TIME_OUT_MS = 500;
     private static final int SOCKET_TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -29,6 +37,7 @@ public class Punter {
             case "maxpoint":        return new MaxPointClaimer();
             case "expanding":       return new ExpandingMineClaimer();
             case "connect":         return new MineConnectClaimer();
+            case "heuristic":       return new HeuristicSolver();
             case "splurgefly":      return new SplurgeFly();
             case "splurgefly44":    return new SplurgeFly(4, 4);
             case "splurgefly53":    return new SplurgeFly(5, 3);

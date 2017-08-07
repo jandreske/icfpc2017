@@ -4,6 +4,9 @@ import io.River;
 
 import java.util.*;
 
+/**
+ * Bfs with caching.
+ */
 class GraphMap {
 
     private final Bfs bfs;
