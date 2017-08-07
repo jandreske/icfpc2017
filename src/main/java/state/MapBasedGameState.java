@@ -262,21 +262,17 @@ class MapBasedGameState implements GameState {
     @Override
     public int getScore(int punter) {
         GraphMap punterMap = getGraphMap(punter);
-        return getMines().stream()
-                .mapToInt(mine -> getScore(punterMap, mine))
-                .sum();
+        return getScore(punterMap);
     }
 
-    private int getScore(GraphMap punterMap) {
-        return getMines().stream()
-                .mapToInt(mine -> getScore(punterMap, mine))
-                .sum();
-    }
-
-    private int getScore(GraphMap punterMap, int mine) {
-        return getSites().stream()
-                .mapToInt(site -> getScore(punterMap, mine, site))
-                .sum();
+    private int getScore(GraphMap map) {
+        int score = 0;
+        for (int mine : getMines()) {
+            for (int site : getSites()) {
+                score += getScore(map, mine, site);
+            }
+        }
+        return score;
     }
 
     private int getScore(GraphMap punterMap, int mine, int site) {
@@ -299,9 +295,9 @@ class MapBasedGameState implements GameState {
 
     @Override
     public List<River> getShortestOpenRoute(int punterId, int site1, int site2) {
-        Set<River> rivers = getRivers().stream()
+        List<River> rivers = getRivers().stream()
                 .filter(r -> r.canUse(punterId) || !r.isClaimed())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         GraphMap punterMap = new GraphMap(getSites(), rivers);
         return punterMap.getShortestRoute(site1, site2);
     }
