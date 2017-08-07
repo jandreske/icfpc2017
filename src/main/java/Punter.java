@@ -39,12 +39,13 @@ public class Punter {
             case "expanding":       return new ExpandingMineClaimer();
             case "connect":         return new MineConnectClaimer();
             case "heuristic":       return new HeuristicSolver();
-            case "splurgefly":      return new SplurgeFly();
-            case "splurgefly44":    return new SplurgeFly(4, 4);
-            case "splurgefly53":    return new SplurgeFly(5, 3);
-            case "sf00":            return new SplurgeFly(0, 0);
-            case "sf14":            return new SplurgeFly(1, 4);
-            default:                return new SplurgeFly();
+            case "splurgefly":      return new SplurgeFly(0);
+            case "sf00":            return new SplurgeFly(0, 0, 0);
+            case "sf14":            return new SplurgeFly(1, 4, 0);
+            case "hcap14":          return new SplurgeFly(1, 4, 3);
+            case "scap14":          return new SplurgeFly(1, 4, 6);
+            case "capfly":          return new SplurgeFly(4);
+            default:                return new SplurgeFly(0);
         }
     }
 

@@ -14,26 +14,28 @@ public class SplurgeFly implements Solver {
     private Move bestChoice = null;
     private final int risk;
     private final int divider;
+    private final int cap;
     private final boolean useDefault;
 
     private static final Logger LOG = LoggerFactory.getLogger(SplurgeFly.class);
 
-    public SplurgeFly() {
+    public SplurgeFly(int cap) {
         risk = 0;
         divider = 0;
+        this.cap = cap;
         useDefault = true;
     }
 
-    public SplurgeFly(int risk, int divider) {
+    public SplurgeFly(int risk, int divider, int cap) {
         this.risk = risk;
         this.divider = divider;
         useDefault = false;
+        this.cap = cap;
     }
 
 
     @Override
     public Move getNextMove(GameState state) {
-        LOG.info("OPTIONS left: {}", state.getRemainingOptions());
         Move move = getMove(state);
         setBestChoice(move);
         if (move.getClaim() != null
@@ -278,6 +280,7 @@ public class SplurgeFly implements Solver {
     }
 
     private boolean enoughMovesLeft(GameState state) {
+        if (cap != 0 && state.getSplurgeCredits(state.getMyPunterId()) > cap) return false;
         int movesLeft = state.getRemainingNumberOfMoves();
         if (movesLeft < state.getSplurgeCredits(state.getMyPunterId())) return false;
         if (3 * movesLeft < state.getMovesPerformed()) return false;
