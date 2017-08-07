@@ -388,6 +388,7 @@ public class SplurgeFly implements Solver {
         if (sites == 1560 && rivers == 2197 && mines == 12) return 5;   //naraSparse
         if (sites == 614 && rivers == 1132 && mines == 1) return 5;     //oxfordSparse
         if (sites == 1175 && rivers == 2234 && mines == 8) return 5;    //gothenburgSparse
+        if (sites == 2389 && rivers == 3632 && mines == 16) return 4;   //oxford
 
         //default, works best on most
         LOG.warn("UNKNOWN MAP with {} sites, {} rivers, {} mines", sites, rivers, mines);
@@ -413,6 +414,7 @@ public class SplurgeFly implements Solver {
         if (sites == 1560 && rivers == 2197 && mines == 12) return 3;   //naraSparse
         if (sites == 614 && rivers == 1132 && mines == 1) return 3;     //oxfordSparse
         if (sites == 1175 && rivers == 2234 && mines == 8) return 3;    //gothenburgSparse
+        if (sites == 2389 && rivers == 3632 && mines == 16) return 4;   //oxford
 
         //default, works best on most
         return 3;
