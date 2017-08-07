@@ -77,6 +77,9 @@ public class Punter {
         Punter punter = new Punter(getSolver(solver));
         try {
             punter.runOfflineMove(in, out);
+        } catch (Throwable t) {
+            LOG.error("unexpected exception", t);
+            throw t;
         } finally {
             punter.timeoutExecutorService.shutdownNow();
         }
