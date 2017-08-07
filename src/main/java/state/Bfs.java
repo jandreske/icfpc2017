@@ -9,17 +9,17 @@ public class Bfs {
     private static final River SENTINEL = new River(-1,-1);
 
     private final int maxVertex;
-    private final Set<Integer> vertices;
+    private final BitSet vertices;
 
     private final ArrayNatMap<List<River>> edgesByVertex;
 
     public Bfs(Collection<River> edges) {
         int n = edges.size();
-        vertices = new HashSet<>(n);
+        vertices = new BitSet(n);
         int maxId = -1;
         for (River e : edges) {
-            vertices.add(e.getSource());
-            vertices.add(e.getTarget());
+            vertices.set(e.getSource());
+            vertices.set(e.getTarget());
             if (e.getSource() > maxId) maxId = e.getSource();
             if (e.getTarget() > maxId) maxId = e.getTarget();
         }
@@ -42,7 +42,7 @@ public class Bfs {
     }
 
     public boolean containsVertex(int vertex) {
-        return vertices.contains(vertex);
+        return vertices.get(vertex);
     }
 
     public List<River> getShortestPath(int source, int target) {
