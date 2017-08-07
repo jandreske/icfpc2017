@@ -9,7 +9,6 @@ import io.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import solvers.*;
-import solvers.chris.HeuristicSolver;
 import state.GameState;
 import state.GameStateFactory;
 

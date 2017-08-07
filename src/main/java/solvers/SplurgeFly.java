@@ -34,38 +34,44 @@ public class SplurgeFly implements Solver {
     @Override
     public Move getNextMove(GameState state) {
         Move move = getMove(state);
+        setBestChoice(move);
         if (move.getClaim() != null
                 && state.areSplurgesActive()
                 && state.getSplurgeCredits(state.getMyPunterId()) > 0) {
             //we want to do a claim, but we have splurge credits left - so lets splurge a bit instead
-            River river = new River(move.getClaim().source, move.getClaim().target);
-            Set<River> candidates = new HashSet<>();
-            candidates.addAll(state.getUnclaimedRiversTouching(river.getSource()));
-            candidates.addAll(state.getUnclaimedRiversTouching(river.getTarget()));
-            candidates.remove(river);
-            if (candidates.isEmpty()) return move;
-            River best = null;
-            int bestPoints = 0;
-            for (River candidate : candidates) {
-                int points = state.getPotentialPoints(river, candidate);
-                if (best == null || points > bestPoints) {
-                    best = candidate;
-                    bestPoints = points;
-                }
-            }
-            List<Integer> sites = new ArrayList<>();
-            if (best.getSource() == river.getSource() || best.getSource() == river.getTarget()) {
-                sites.add(best.getTarget());
-                sites.add(best.getSource());
-                sites.add(river.getOpposite(best.getSource()));
-            } else {
-                sites.add(best.getSource());
-                sites.add(best.getTarget());
-                sites.add(river.getOpposite(best.getTarget()));
-            }
-            return Move.splurge(state.getMyPunterId(), sites);
+            return turnIntoSplurge(state, move);
         }
         return move;
+    }
+
+    private Move turnIntoSplurge(GameState state, Move move) {
+        River river = new River(move.getClaim().source, move.getClaim().target);
+        Set<River> candidates = new HashSet<>();
+        candidates.addAll(state.getUnclaimedRiversTouching(river.getSource()));
+        candidates.addAll(state.getUnclaimedRiversTouching(river.getTarget()));
+        candidates.remove(river);
+        if (candidates.isEmpty()) return move;
+        River best = null;
+        int bestPoints = 0;
+        for (River candidate : candidates) {
+            if (Thread.currentThread().isInterrupted()) return null;
+            int points = state.getPotentialPoints(river, candidate);
+            if (best == null || points > bestPoints) {
+                best = candidate;
+                bestPoints = points;
+            }
+        }
+        List<Integer> sites = new ArrayList<>();
+        if (best.getSource() == river.getSource() || best.getSource() == river.getTarget()) {
+            sites.add(best.getTarget());
+            sites.add(best.getSource());
+            sites.add(river.getOpposite(best.getSource()));
+        } else {
+            sites.add(best.getSource());
+            sites.add(best.getTarget());
+            sites.add(river.getOpposite(best.getTarget()));
+        }
+        return Move.splurge(state.getMyPunterId(), sites);
     }
 
     private Move getMove(GameState state) {
@@ -121,6 +127,9 @@ public class SplurgeFly implements Solver {
                 best = river;
                 bestPoints = points;
                 setBestChoice(Move.claim(state.getMyPunterId(), river));
+                if (state.areSplurgesActive() && state.getSplurgeCredits(state.getMyPunterId()) > 0) {
+                    setBestChoice(turnIntoSplurge(state, getBestChoice()));
+                }
             }
         }
         if (best != null) {
@@ -136,8 +145,8 @@ public class SplurgeFly implements Solver {
             boolean canClaimAtOnceLater = false;
 
             for (int mineS : mines) {
-                if (Thread.currentThread().isInterrupted()) return null;
                 for (int mineT : mines) {
+                    if (Thread.currentThread().isInterrupted()) return null;
                     if (mineS == mineT) continue;
                     if (state.canReach(state.getMyPunterId(), mineS, mineT)) continue;
                     List<River> path = state.getShortestOpenRoute(state.getMyPunterId(), mineS, mineT);
@@ -372,11 +381,11 @@ public class SplurgeFly implements Solver {
         if (sites == 42 && rivers == 81 && mines == 3) return 5;        //sierpinski
         if (sites == 27 && rivers == 65 && mines == 4) return 5;        //circle
         if (sites == 97 && rivers == 187 && mines == 4) return 5;       //randomMedium
-        if (sites == 86 && rivers == 123 && mines == 4) return 0;       //randomSparse
+        if (sites == 86 && rivers == 123 && mines == 4) return 5;       //randomSparse
         if (sites == 488 && rivers == 945 && mines == 8) return 4;      //bostonSparse
         if (sites == 301 && rivers == 386 && mines == 5) return 4;      //tube
         if (sites == 961 && rivers == 1751 && mines == 32) return 0;    //edinburghSparse
-        if (sites == 1560 && rivers == 2197 && mines == 12) return 0;   //naraSparse
+        if (sites == 1560 && rivers == 2197 && mines == 12) return 5;   //naraSparse
         if (sites == 614 && rivers == 1132 && mines == 1) return 5;     //oxfordSparse
         if (sites == 1175 && rivers == 2234 && mines == 8) return 5;    //gothenburgSparse
 
@@ -397,11 +406,11 @@ public class SplurgeFly implements Solver {
         if (sites == 42 && rivers == 81 && mines == 3) return 3;        //sierpinski
         if (sites == 27 && rivers == 65 && mines == 4) return 3;        //circle
         if (sites == 97 && rivers == 187 && mines == 4) return 3;       //randomMedium
-        if (sites == 86 && rivers == 123 && mines == 4) return 0;       //randomSparse
+        if (sites == 86 && rivers == 123 && mines == 4) return 3;       //randomSparse
         if (sites == 488 && rivers == 945 && mines == 8) return 4;      //bostonSparse
         if (sites == 301 && rivers == 386 && mines == 5) return 4;      //tube
         if (sites == 961 && rivers == 1751 && mines == 32) return 0;    //edinburghSparse
-        if (sites == 1560 && rivers == 2197 && mines == 12) return 0;   //naraSparse
+        if (sites == 1560 && rivers == 2197 && mines == 12) return 3;   //naraSparse
         if (sites == 614 && rivers == 1132 && mines == 1) return 3;     //oxfordSparse
         if (sites == 1175 && rivers == 2234 && mines == 8) return 3;    //gothenburgSparse
 
