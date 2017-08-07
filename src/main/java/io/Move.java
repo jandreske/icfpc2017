@@ -64,6 +64,10 @@ public class Move {
         return move;
     }
 
+    /**
+     * Claim or option a river.
+     * Returns claim if the river is not yet claimed; option otherwise.
+     */
     public static Move claim(int punter, River river) {
         if (river.isClaimed()) return option(punter, river);
         ClaimData claim = new ClaimData();
