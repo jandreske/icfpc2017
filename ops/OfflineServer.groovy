@@ -39,11 +39,10 @@ def claimSplurge(splurge) {
 }
 
 def shorten(s) {
-    // return s
-    if (s.length() <= 70) {
+    if (s.length() <= 78) {
         s
     } else {
-        s[0..57] + "  #####  " + s[-5..-1]
+        s[0..62] + "  #####  " + s[-5..-1]
     }
 }
 
@@ -64,7 +63,7 @@ def readJson(InputStream inp) {
         }
         n += m;
     }
-    println "RECV ${shorten(new String(data))}"
+    println "RECV ${len}:${shorten(new String(data))}"
     return jsonSlurper.parse(data)
 }
 
@@ -75,7 +74,7 @@ def writeJson(PrintStream out, obj) {
     out.write(':' as char)
     out.print(json)
     out.flush()
-    println "SENT ${shorten(json)}"
+    println "SENT ${n}:${shorten(json)}"
 }
 
 executor = // new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new SynchronousQueue<>())
@@ -96,7 +95,13 @@ def startPunter(punter) {
         PipedInputStream in2 = new PipedInputStream(PIPE_SIZE)
         [ inp: inp,
           out: new PrintStream(new PipedOutputStream(in2)),
-          task: executor.submit {Punter.runOffline(punter.command, in2, new PrintStream(out))}
+          task: executor.submit {
+              try {
+                  Punter.runOffline(punter.command, in2, new PrintStream(out))
+              } catch (Throwable t) {
+                  println "Unexpected exception: ${t}"
+                  System.exit(1)
+              }}
         ]
     }
 }
