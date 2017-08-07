@@ -268,19 +268,16 @@ class MapBasedGameState implements GameState {
     private int getScore(GraphMap map) {
         int score = 0;
         for (int mine : getMines()) {
-            for (int site : getSites()) {
-                score += getScore(map, mine, site);
+            if (map.containsSite(mine)) {
+                for (int site : getSites()) {
+                    if (site != mine && map.hasRoute(mine, site)) {
+                        int shortest = getShortestRouteLength(mine, site);
+                        score += shortest * shortest;
+                    }
+                }
             }
         }
         return score;
-    }
-
-    private int getScore(GraphMap punterMap, int mine, int site) {
-        if (site == mine || !punterMap.hasRoute(mine, site)) {
-            return 0;
-        }
-        int shortest = getShortestRouteLength(mine, site);
-        return shortest * shortest;
     }
 
     @Override

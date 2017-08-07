@@ -41,20 +41,21 @@ public class Bfs {
         es.add(edge);
     }
 
+    public boolean containsVertex(int vertex) {
+        return vertices.contains(vertex);
+    }
+
     public List<River> getShortestPath(int source, int target) {
         if (source == target) {
             return Collections.emptyList();
         }
-        if (!(vertices.contains(source) && vertices.contains(target))) {
+        if (!(containsVertex(source) && containsVertex(target))) {
             return null;
         }
 
         ArrayNatMap<River> visited = new ArrayNatMap<>(maxVertex + 1);
-        // Map<Integer, River> visited = new HashMap<>();
         IntQueue queue = new IntQueue(24);
-        // LinkedList<Integer> queue = new LinkedList<>();
-        visited.put(source, SENTINEL);
-        queue.addLast(source);
+        enqueue(visited, queue, source, SENTINEL);
         while (!queue.isEmpty()) {
             int node = queue.removeFirst();
             if (node == target) {
@@ -64,11 +65,9 @@ public class Bfs {
             if (edges != null) {
                 for (River r : edges) {
                     if (r.getSource() == node && !visited.containsKey(r.getTarget())) {
-                        queue.addLast(r.getTarget());
-                        visited.put(r.getTarget(), r);
-                    } else if (r.getTarget() == node && !visited.containsKey(r.getSource())) {
-                        queue.addLast(r.getSource());
-                        visited.put(r.getSource(), r);
+                        enqueue(visited, queue, r.getTarget(), r);
+                    } else if (!visited.containsKey(r.getSource())) {
+                        enqueue(visited, queue, r.getSource(), r);
                     }
                 }
             }
@@ -76,19 +75,19 @@ public class Bfs {
         return null;
     }
 
-    private List<River> extractPath(ArrayNatMap<River> visited, int node) {
-        LinkedList<River> path = new LinkedList<>();
-        for (;;) {
-            River entry = visited.get(node);
-            if (entry == SENTINEL) {
-                return path;
-            }
-            path.addFirst(entry);
-            node = entry.getOpposite(node);
-        }
+    public Map<Integer, Integer> getAllShortestPathLengths(int source) {
+        Map<Integer, Integer> result = new HashMap<>();
+        return result;
     }
 
-    private List<River> extractPath(Map<Integer, River> visited, int node) {
+
+
+    private static void enqueue(ArrayNatMap<River> visited, IntQueue queue, int node, River edge) {
+        visited.put(node, edge);
+        queue.addLast(node);
+    }
+
+    private static List<River> extractPath(ArrayNatMap<River> visited, int node) {
         LinkedList<River> path = new LinkedList<>();
         for (;;) {
             River entry = visited.get(node);
