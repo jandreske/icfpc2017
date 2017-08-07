@@ -5,6 +5,7 @@ import io.Move;
 import io.River;
 import state.GameState;
 
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -19,7 +20,7 @@ public class MineConnectClaimer implements Solver {
         Set<River> freeRivers = state.getUnclaimedRivers();
         setBestChoice(Move.claim(state.getMyPunterId(), freeRivers.iterator().next()));
         Set<Integer> mines = state.getMines();
-        Set<River> ownRivers = state.getOwnRivers();
+        BitSet ownSites = bitSetFrom(state.getOwnRivers());
 
         for (int mineS : mines) {
             for (int mineT : mines) {
@@ -36,8 +37,8 @@ public class MineConnectClaimer implements Solver {
                         int myScore = 1;
                         if (mines.contains(river.getSource())) myScore += 100;
                         if (mines.contains(river.getTarget())) myScore += 100;
-                        if (anyTouches(ownRivers, river.getSource())) myScore += 60;
-                        if (anyTouches(ownRivers, river.getSource())) myScore += 60;
+                        if (ownSites.get(river.getSource())) myScore += 60;
+                        if (ownSites.get(river.getTarget())) myScore += 60;
                         if (myScore > score) {
                             best = river;
                             score = myScore;
@@ -53,8 +54,8 @@ public class MineConnectClaimer implements Solver {
         int bestPoints = 0;
         for (River river : freeRivers) {
             if (Thread.currentThread().isInterrupted()) return null;
-            boolean connectedSource = anyTouches(ownRivers, river.getSource());
-            boolean connectedTarget = anyTouches(ownRivers, river.getTarget());
+            boolean connectedSource = ownSites.get(river.getSource());
+            boolean connectedTarget = ownSites.get(river.getTarget());
 
             //ignore those unconnected to our current rivers
             if (!connectedSource && ! connectedTarget) continue;
@@ -77,8 +78,13 @@ public class MineConnectClaimer implements Solver {
         return Move.claim(state.getMyPunterId(), freeRivers.iterator().next());
     }
 
-    private static boolean anyTouches(Collection<River> rivers, int site) {
-        return rivers.stream().anyMatch(river -> river.touches(site));
+    private static BitSet bitSetFrom(Collection<River> edges) {
+        BitSet set = new BitSet();
+        for (River r : edges) {
+            set.set(r.getSource());
+            set.set(r.getTarget());
+        }
+        return set;
     }
 
     @Override
