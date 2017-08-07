@@ -29,6 +29,10 @@ class MapBasedGameState implements GameState {
 
     private final java.util.Map<Integer, Integer> credits = new HashMap<>();
 
+    public java.util.Map<Integer, Integer> getCredits() {
+        return credits;
+    }
+
     private GraphMap graphMap;
     private GraphMap[] graphMapByPunter = null;
     private Future[] futures;
