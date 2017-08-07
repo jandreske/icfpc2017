@@ -46,13 +46,12 @@ public class HeuristicSolver implements Solver {
     }
 
 
-    private void classifyUnclaimedRivers() {
-        for (River river : state.getUnclaimedRivers()) {
+    private void classifyUnclaimedRivers(Collection<River> rivers) {
+        for (River river : rivers) {
             if (Thread.currentThread().isInterrupted()) return;
             if (isClaimed(river.getSource())) {
                 if (isClaimed(river.getTarget())) {
                     if (!state.canReach(state.getMyPunterId(), river.getSource(), river.getTarget())) {
-                        // BIG gain
                         addCandidate(RiverValue.CONNECT_NETS, river);
                     }
                 } else if (state.isMine(river.getTarget())) {
@@ -92,12 +91,20 @@ public class HeuristicSolver implements Solver {
     @Override
     public Move getNextMove(GameState state) {
         reset(state);
-        classifyUnclaimedRivers();
+        classifyUnclaimedRivers(state.getUnclaimedRivers());
+        if (state.areOptionsActive() && state.getRemainingOptions() > 0) {
+            classifyUnclaimedRivers(state.getAvailableOptions());
+        }
+
         RiverValue bestValue = getBestValue();
         if (bestValue != null) {
-            LOG.info("found cadidate of value {}", bestValue);
+            LOG.info("found candidate of value {}", bestValue);
             Collection<River> choices = candidates.get(bestValue);
-            return Move.claim(state.getMyPunterId(), chooseByDegree(bestValue, choices));
+            River choice = chooseByDegree(bestValue, choices);
+            if (state.getAvailableOptions().contains(choice)) {
+                return Move.option(state.getMyPunterId(), choice);
+            }
+            return Move.claim(state.getMyPunterId(), choice);
         }
         LOG.info("falling back to random");
         return randomClaimer.getNextMove(state);
