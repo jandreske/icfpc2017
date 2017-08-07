@@ -3,6 +3,7 @@ package io;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import state.GameState;
 
+import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -123,6 +124,14 @@ public class Move {
 
     public void setState(GameState state) {
         this.state = state;
+    }
+
+    @Transient
+    public int getPunter() {
+        if (claim != null) return claim.punter;
+        if (splurge != null) return splurge.punter;
+        if (option != null) return option.punter;
+        return pass.punter;
     }
 
     @Override

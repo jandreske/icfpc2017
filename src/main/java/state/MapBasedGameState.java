@@ -3,7 +3,6 @@ package state;
 import io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import solvers.SplurgeFly;
 
 import java.beans.Transient;
 import java.util.HashMap;
@@ -195,6 +194,19 @@ class MapBasedGameState implements GameState {
         }
         if (graphMapByPunter != null) {
             graphMapByPunter[punter] = null;
+        }
+    }
+
+    @Override
+    public void applyMoves(List<Move> moves) {
+        if (moves.size() > numPunters) {
+            throw new LogicException("too many previous moves: " + moves.size());
+        }
+        for (int i = 0; i < numPunters; i++) {
+            int pid = (myPunterId + i) % numPunters;
+            moves.stream().filter(m -> m.getPunter() == pid)
+                    .findAny()
+                    .ifPresent(this::applyMove);
         }
     }
 

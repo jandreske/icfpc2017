@@ -171,4 +171,6 @@ public interface GameState {
     }
 
     int getSplurgeCredits(int punter);
+
+    void applyMoves(List<Move> moves);
 }

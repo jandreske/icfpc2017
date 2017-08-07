@@ -16,6 +16,7 @@ import state.GameStateFactory;
 import java.io.*;
 
 import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -199,7 +200,7 @@ public class Punter {
             int punterId = state.getMyPunterId();
             while (state.getRemainingNumberOfMoves() > 0) {
                 Gameplay.Request moveRequest = readJson(in, Gameplay.Request.class);
-                moveRequest.getMove().moves.forEach(state::applyMove);
+                state.applyMoves(moveRequest.getMove().moves);
                 for (Move move : moveRequest.getMove().moves) {
                     Move.ClaimData claim = move.getClaim();
                     if (claim != null) {
@@ -224,7 +225,7 @@ public class Punter {
 
             LOG.info("Receiving scoring info...");
             Scoring.Data scoring = readJson(in, Scoring.class).stop;
-            scoring.moves.forEach(state::applyMove);
+            state.applyMoves(scoring.moves);
             LOG.info("number of own rivers: {}", state.getOwnRivers().size());
             int myScore = scoring.scores.stream().filter(score -> score.punter == punterId).findFirst().get().score;
             int rank = numPunters - (int) scoring.scores.stream().filter(score -> score.score < myScore).count();
@@ -294,7 +295,7 @@ public class Punter {
             if (state == null) {
                 throw new ProtocolException("state not supplied in offline mode");
             }
-            moveRequest.getMove().moves.forEach(state::applyMove);
+            state.applyMoves(moveRequest.getMove().moves);
             Move move = getNextMoveWithTimeout(state, TIME_OUT_MS);
             if (move == null) move = Move.pass(state.getMyPunterId());
             state.movePerformed();
