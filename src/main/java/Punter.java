@@ -32,6 +32,8 @@ public class Punter {
             case "splurgefly":      return new SplurgeFly();
             case "splurgefly44":    return new SplurgeFly(4, 4);
             case "splurgefly53":    return new SplurgeFly(5, 3);
+            case "sf00":            return new SplurgeFly(0, 0);
+            case "sf14":            return new SplurgeFly(1, 4);
             default:                return new SplurgeFly();
         }
     }
