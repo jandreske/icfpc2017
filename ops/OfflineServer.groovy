@@ -39,6 +39,7 @@ def claimSplurge(splurge) {
 }
 
 def shorten(s) {
+    // return s
     if (s.length() <= 78) {
         s
     } else {
@@ -125,7 +126,7 @@ def runSetup(punter, id) {
     punter.name = msg1.me
     writeJson(pstate.out, [you: punter.name])
     def time = System.nanoTime()
-    writeJson(pstate.out, [punter: punter.id, punters: numPunters, map: map, settings: [futures: true, splurges: true]])
+    writeJson(pstate.out, [punter: punter.id, punters: numPunters, map: map, settings: [options: true, futures: true, splurges: true]])
     def msg2 = readJson(pstate.inp)
     punter.state = msg2.state
     time = (System.nanoTime() - time) / 1.0e9;
