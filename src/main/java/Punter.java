@@ -45,7 +45,7 @@ public class Punter {
             case "hcap14":          return new SplurgeFly(1, 4, 3);
             case "scap14":          return new SplurgeFly(1, 4, 6);
             case "capfly":          return new SplurgeFly(4);
-            default:                return new SplurgeFly(0);
+            default:                return new MineConnectClaimer();
         }
     }
 
