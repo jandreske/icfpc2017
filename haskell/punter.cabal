@@ -1,0 +1,35 @@
+name:                punter
+version:             0.1.0.0
+synopsis:            ICFP Contest 2017 Punter implementation
+homepage:            https://github.com/jandreske/icfpc2017/blob/master/haskell/README.md
+license:             BSD3
+license-file:        LICENSE
+author:              Christoph Breitkopf
+maintainer:          chbreitkopf@gmail.com
+copyright:           2017 Christoph Breitkopf, Jan Dreske
+category:            Game
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.24
+
+executable punter
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  other-modules:       Protocol, State, Solver
+  ghc-options:         -Wall -rtsopts
+  build-depends:       base, aeson, bytestring, containers
+  default-language:    Haskell2010
+
+test-suite punter-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , punter
+  ghc-options:         -rtsopts
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/jandreske/icfpc2017
+  subdir:   haskell
