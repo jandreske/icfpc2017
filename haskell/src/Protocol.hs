@@ -8,12 +8,20 @@ import qualified Data.ByteString.Lazy.Char8 as BC
 import System.IO
 
 
+-- The tast requires JSON messages to be prefixed with a
+-- length in characters, like this:
+--    7:{"x"=0}
+-- Assuming we use only ASCII characters, the length can
+-- treated as the number of bytes.
+
+-- Encode value as length-prefixed JSON
 encodeWithLength :: (ToJSON a) => a -> B.ByteString
 encodeWithLength x = let s = encode x
                          n = B.length s
                      in
                          B.append (BC.pack (shows n ":")) s
 
+-- decode length-prefixed JSON value
 decodeWithLength :: (FromJSON a) => B.ByteString -> Maybe (a, B.ByteString)
 decodeWithLength s = let (n',r') = BC.span (':' /=) s
                          n = read (BC.unpack n')
