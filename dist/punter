@@ -1,2 +1,3 @@
 #!/bin/sh
-java -jar icfpc2017.jar
+instdir=`dirname $0`
+java -jar $instdir/icfpc2017.jar
