@@ -343,7 +343,7 @@ if (ALL_PERMUTATIONS) {
         numGame++
     }
 } else {
-    runGame(ps, 0)
+    runGame(punters, 0)
 }
 
 executor.shutdown()
