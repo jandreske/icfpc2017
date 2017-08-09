@@ -8,6 +8,14 @@ import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
+
+// config section
+SETUP_TIMEOUT = 10
+MOVE_TIMEOUT = 1
+SETTINGS = [futures: false, splurges: false, options: false]
+ALL_PERMUTATIONS = false
+
+
 jsonSlurper = new JsonSlurper()
 
 def claimRiver(claim) {
@@ -22,6 +30,10 @@ def claimRiver(claim) {
                 System.exit(1)
             }
             else {
+                if (!SETTINGS.options) {
+                    println "Error: options disables, but claim needs them: ${claim}"
+                    System.exit(1)
+                }
                 r.option = claim.punter
             }
         }
@@ -29,6 +41,10 @@ def claimRiver(claim) {
 }
 
 def claimSplurge(splurge) {
+    if (!OPTIONS.splurges) {
+        println "Error: splurge used but disabled"
+        System.exit(1)
+    }
     def claim = [punter: splurge.punter, source: 0, target: 0]
     int n = splurge.route.size()
     for (int i = 1; i < n; i++) {
@@ -118,20 +134,19 @@ def stopPunter(punter, pstate) {
 }
 
 
-def runSetup(punter, id) {
-    punter.id = id
-    println "SETUP ${punter} ..."
+def runSetup(punter) {
+    println "SETUP ${punter.id}, ${punter.name} ..."
     def pstate = startPunter(punter)
     def msg1 = readJson(pstate.inp)
     punter.name = msg1.me
     writeJson(pstate.out, [you: punter.name])
     def time = System.nanoTime()
-    writeJson(pstate.out, [punter: punter.id, punters: numPunters, map: map, settings: [options: true, futures: true, splurges: true]])
+    writeJson(pstate.out, [punter: punter.id, punters: numPunters, map: map, settings: SETTINGS])
     def msg2 = readJson(pstate.inp)
     punter.state = msg2.state
     time = (System.nanoTime() - time) / 1.0e9;
     println(String.format("TIME %.3f seconds", time))
-    if (time > 10) {
+    if (time > SETUP_TIMEOUT) {
         println "TIMEOUT in setup phase"
         System.exit(0)
     }
@@ -166,7 +181,7 @@ def runMove(punter) {
         println "PASS ${msg2.pass}"
     }
     println(String.format("TIME %.3f seconds", time))
-    if (time > 1) {
+    if (time > MOVE_TIMEOUT) {
         println "TIMEOUT in game phase"
         System.exit(0)
     }
@@ -182,11 +197,12 @@ def runMove(punter) {
 }
 
 def computeScore(int punter) {
+    Map<Integer, List> riversByNode = groupRiversByNode(rivers)
     int score = 0
     map.mines.each { mine ->
         map.sites.each { site ->
             if (site.id != mine && pathOnOwnRivers(punter, mine, site.id)) {
-                int d = shortestPath(mine, site.id)
+                int d = shortestPath(mine, site.id, riversByNode)
                 score += d * d
             }
         }
@@ -195,11 +211,21 @@ def computeScore(int punter) {
 }
 
 def pathOnOwnRivers(int punter, int a, int b) {
-    bfs(a, b, rivers.findAll { r -> r.owner == punter || r.option == punter }) >= 0
+    def myRivers = rivers.findAll { r -> r.owner == punter || r.option == punter }
+    bfs(a, b, groupRiversByNode(myRivers)) >= 0
 }
 
-def shortestPath(int a, int b) {
-    bfs(a, b, rivers)
+def shortestPath(int a, int b, allRiversByNode) {
+    bfs(a, b, allRiversByNode)
+}
+
+def groupRiversByNode(rivers) {
+    Map<Integer, List> result = new HashMap<>()
+    rivers.each { river ->
+        enterTable(result, river.source, river)
+        enterTable(result, river.target, river)
+    }
+    return result
 }
 
 def enterTable(Map<Integer, List> table, int node, river) {
@@ -211,13 +237,7 @@ def enterTable(Map<Integer, List> table, int node, river) {
     e.add(river)
 }
 
-def bfs(int source, int target, rivers) {
-    Map<Integer, List> riversByNode = new HashMap<>()
-    rivers.each { river ->
-        enterTable(riversByNode, river.source, river)
-        enterTable(riversByNode, river.target, river)
-    }
-
+def bfs(int source, int target, riversByNode) {
     Map<Integer,Integer> visited = new HashMap<>()
     Queue<Integer> queue = new LinkedList<>()
     visited.put(source, -1)
@@ -258,7 +278,7 @@ if (args.length < 3) {
     System.err.println "usage: server map punter1 punter2 ..."
     System.exit(1)
 }
-String mapFile = args[0]
+mapFile = args[0]
 punters = args[1..-1].collect { p ->
     [command: p, external: new File(p).canExecute(),
      moves: 0, moveTime: 0.0]
@@ -269,35 +289,61 @@ println "Map: ${mapFile}"
 println "Punters: ${numPunters}"
 
 map = jsonSlurper.parse(new File(mapFile))
-// read again to get a copy of the rivers
-rivers = jsonSlurper.parse(new File(mapFile)).rivers
-
-println "Map: ${map.sites.size()} sites, ${rivers.size()} rivers, ${map.mines.size()} mines."
+println "Map: ${map.sites.size()} sites, ${map.rivers.size()} rivers, ${map.mines.size()} mines."
 println "Site id range: ${map.sites.collect({it.id}).min()}-${map.sites.collect({it.id}).max()}"
+rivers = []
 
-punters.eachWithIndex { p,id ->
-    runSetup(p,id)
-    println "Punter ${id} initialized: ${p.name}"
+def runGame(punters, numGame) {
+    // read map again to get a copy of the rivers
+    rivers = jsonSlurper.parse(new File(mapFile)).rivers
+
+    punters.eachWithIndex { p,id ->
+        p.id = id
+        p.moves = 0
+        p.moveTime = 0.0
+        p.state = null
+        println "Punter ${id}: ${p}"
+    }
+    punters.each { p ->
+        runSetup(p)
+        println "Punter ${p.id} initialized"
+    }
+
+    int nMoves = rivers.size()
+    for (int move = 0; move < nMoves; move++) {
+        int punter = move % numPunters
+        println "### Move ${move}/${nMoves}"
+        runMove(punters[punter])
+    }
+    // sending stop seems unnecessary
+
+    double totalTime = 0.0
+    punters.each { p ->
+        int numRivers = rivers.count { it.owner == p.id || it.option == p.id }
+        p.score = computeScore(p.id)
+        println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
+                              p.id, p.score, p.moves, 1000 * p.setupTime,
+                              1000 * p.moveTime / p.moves, 1000 * p.maxTime,
+                              numRivers, p.name))
+        totalTime += p.moveTime
+    }
+    println(String.format("Total move time: %.3f seconds", totalTime))
+    if (ALL_PERMUTATIONS) {
+        def log = new File("results.csv")
+        punters.each { p ->
+            log.append("${numGame};${p.id};${p.score};${p.name}\n")
+        }
+    }
 }
 
-int nMoves = rivers.size()
-for (int move = 0; move < nMoves; move++) {
-    int punter = move % numPunters
-    println "### Move ${move}/${nMoves}"
-    runMove(punters[punter])
+if (ALL_PERMUTATIONS) {
+    int numGame = 1
+    punters.eachPermutation { ps ->
+        runGame(ps, numGame)
+        numGame++
+    }
+} else {
+    runGame(ps, 0)
 }
+
 executor.shutdown()
-
-// sending stop seems unnecessary
-
-// println "Final claims: ${rivers}"
-double totalTime = 0.0
-punters.each { p ->
-    int numRivers = rivers.count { it.owner == p.id || it.option == p.id }
-    println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
-                          p.id, computeScore(p.id), p.moves, 1000 * p.setupTime,
-                          1000 * p.moveTime / p.moves, 1000 * p.maxTime,
-                          numRivers, p.name))
-    totalTime += p.moveTime
-}
-println(String.format("Total move time: %.3f seconds", totalTime))
