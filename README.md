@@ -11,7 +11,8 @@ For convenience, our compiled submissions are available in the folder
 `submissions`.
 
 They have a small problem: The `punter` scripts will
-only work in the currect directory. [The fix is trivial](https://github.com/jandreske/icfpc2017/commit/cbe50f19db854ce51b1f9145f56a4cd0855b6fe8).
+only work in the current directory.
+[The fix is trivial](https://github.com/jandreske/icfpc2017/commit/cbe50f19db854ce51b1f9145f56a4cd0855b6fe8).
 
 Also, we forgot to disable logging in the lightning submission. When
 run, it will create a file `server.log` in the current directory. This
@@ -19,7 +20,7 @@ can be safely ignored/deleted.
  
 ## Strategy
 
-We write several punters during the contest, mostly being extensions
+We wrote several punters during the contest, mostly being extensions
 and refinements on the punters that came before them. We spent a lot
 of time on futures and splurges, but actually got lower scores with
 the code activated, so our final submission uses only options.
@@ -37,9 +38,10 @@ Also, we later rewrote some functions using streams to explicit loops
 for performance.
 
 The choice of Java proved less than ideal because of the huge JVM
-  startup times and missing Hotspot optimizations in the 1-second
-  runtime limit. Also, we had a some trouble respecting the runtime
-  limit and had to sprinkle our code with `Thread.currentThread().isInterrupted()`queries.
+startup times and missing Hotspot optimizations in the 1-second
+runtime limit. Also, we had some trouble respecting the runtime
+limit and had to sprinkle our code with
+`Thread.currentThread().isInterrupted()` queries.
 
 Other:
 
