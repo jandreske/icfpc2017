@@ -2,6 +2,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import Punter
 import groovy.transform.CompileStatic
+import groovy.transform.Field
 
 import java.util.concurrent.Executors
 import java.util.concurrent.SynchronousQueue
@@ -10,13 +11,21 @@ import java.util.concurrent.TimeUnit
 
 
 // config section
-SETUP_TIMEOUT = 10
-MOVE_TIMEOUT = 1
-SETTINGS = [futures: false, splurges: false, options: false]
-ALL_PERMUTATIONS = false
+final SETUP_TIMEOUT = 10
+final MOVE_TIMEOUT = 1
+final SETTINGS = [futures: false, splurges: false, options: false]
+final ALL_PERMUTATIONS = false
 
+enum Verbosity {
+    SILENT, GAMES, MOVES, MOVE_DETAIL, MESSAGES, FULL
+}
+@Field Verbosity verbosity = Verbosity.MOVES
 
-jsonSlurper = new JsonSlurper()
+boolean isVerbosity(Verbosity v) {
+    return verbosity.compareTo(v) >= 0
+}
+
+final jsonSlurper = new JsonSlurper()
 
 def claimRiver(claim) {
     rivers.each { r ->
@@ -31,7 +40,7 @@ def claimRiver(claim) {
             }
             else {
                 if (!SETTINGS.options) {
-                    println "Error: options disables, but claim needs them: ${claim}"
+                    println "Error: options disabled, but claim needs them: ${claim}"
                     System.exit(1)
                 }
                 r.option = claim.punter
@@ -55,7 +64,9 @@ def claimSplurge(splurge) {
 }
 
 def shorten(s) {
-    // return s
+    if (isVerbosity(Verbosity.FULL)) {
+        return s
+    }
     if (s.length() <= 78) {
         s
     } else {
@@ -80,7 +91,9 @@ def readJson(InputStream inp) {
         }
         n += m;
     }
-    println "RECV ${len}:${shorten(new String(data))}"
+    if (isVerbosity(Verbosity.MESSAGES)) {
+        println "RECV ${len}:${shorten(new String(data))}"
+    }
     return jsonSlurper.parse(data)
 }
 
@@ -91,13 +104,14 @@ def writeJson(PrintStream out, obj) {
     out.write(':' as char)
     out.print(json)
     out.flush()
-    println "SENT ${n}:${shorten(json)}"
+    if (isVerbosity(Verbosity.MESSAGES)) {
+        println "SENT ${n}:${shorten(json)}"
+    }
 }
 
-executor = // new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new SynchronousQueue<>())
-        Executors.newFixedThreadPool(1)
+final executor = Executors.newFixedThreadPool(1)
 
-PIPE_SIZE = 16384
+final PIPE_SIZE = 16384
 
 def startPunter(punter) {
     if (punter.external) {
@@ -135,7 +149,9 @@ def stopPunter(punter, pstate) {
 
 
 def runSetup(punter) {
-    println "SETUP ${punter.id}, ${punter.name} ..."
+    if (isVerbosity(Verbosity.MOVES)) {
+        println "SETUP ${punter.id}, ${punter.name} ..."
+    }
     def pstate = startPunter(punter)
     def msg1 = readJson(pstate.inp)
     punter.name = msg1.me
@@ -145,7 +161,6 @@ def runSetup(punter) {
     def msg2 = readJson(pstate.inp)
     punter.state = msg2.state
     time = (System.nanoTime() - time) / 1.0e9;
-    println(String.format("TIME %.3f seconds", time))
     if (time > SETUP_TIMEOUT) {
         println "TIMEOUT in setup phase"
         System.exit(0)
@@ -160,7 +175,9 @@ def getLastMoves() {
 }
 
 def runMove(punter) {
-    println "### Getting move from punter ${punter.id} ..."
+    if (isVerbosity(Verbosity.MOVE_DETAIL)) {
+        println "### Getting move from punter ${punter.id} ..."
+    }
     def pstate = startPunter(punter)
     def msg1 = readJson(pstate.inp)
     punter.name = msg1.me
@@ -170,17 +187,20 @@ def runMove(punter) {
     def msg2 = readJson(pstate.inp)
     time = (System.nanoTime() - time) / 1.0e9
     if (msg2.containsKey('claim')) {
-        println "CLAIM ${msg2.claim}"
+        if (isVerbosity(Verbosity.MOVE_DETAIL)) {
+            println "CLAIM ${msg2.claim}"
+        }
         claimRiver(msg2.claim)
     } else if (msg2.containsKey('splurge')) {
-        println "SPLURGE ${msg2.splurge}"
+        if (isVerbosity(Verbosity.MOVE_DETAIL)) {
+            println "SPLURGE ${msg2.splurge}"
+        }
         claimSplurge(msg2.splurge)
     } else if (msg2.containsKey('option')) {
         claimRiver(msg2.option)
-    } else {
+    } else if (isVerbosity(Verbosity.MOVE_DETAIL)) {
         println "PASS ${msg2.pass}"
     }
-    println(String.format("TIME %.3f seconds", time))
     if (time > MOVE_TIMEOUT) {
         println "TIMEOUT in game phase"
         System.exit(0)
@@ -255,16 +275,13 @@ def bfs(int source, int target, riversByNode) {
                 node = orig
             }
         }
-        List rvs = riversByNode.get(node)
-        if (rvs != null) {
-            rvs.each { r ->
-                if (r.source == node && !visited.containsKey(r.target)) {
-                    queue.addLast(r.target)
-                    visited.put(r.target, node)
-                } else if (!visited.containsKey(r.source)) {
-                    queue.addLast(r.source)
-                    visited.put(r.source, node)
-                }
+        riversByNode.get(node)?.each { r ->
+            if (r.source == node && !visited.containsKey(r.target)) {
+                queue.addLast(r.target)
+                visited.put(r.target, node)
+            } else if (!visited.containsKey(r.source)) {
+                queue.addLast(r.source)
+                visited.put(r.source, node)
             }
         }
     }
@@ -302,17 +319,23 @@ def runGame(punters, numGame) {
         p.moves = 0
         p.moveTime = 0.0
         p.state = null
-        println "Punter ${id}: ${p}"
+        if (isVerbosity(Verbosity.MOVES)) {
+            println "Punter ${id}: ${p}"
+        }
     }
     punters.each { p ->
         runSetup(p)
-        println "Punter ${p.id} initialized"
+        if (isVerbosity(Verbosity.MOVES)) {
+            println "Punter ${p.id} initialized"
+        }
     }
 
     int nMoves = rivers.size()
     for (int move = 0; move < nMoves; move++) {
         int punter = move % numPunters
-        println "### Move ${move}/${nMoves}"
+        if (isVerbosity(Verbosity.MOVES)) {
+            println "### Move ${move}/${nMoves}, punter ${punter}"
+        }
         runMove(punters[punter])
     }
     // sending stop seems unnecessary
@@ -321,13 +344,17 @@ def runGame(punters, numGame) {
     punters.each { p ->
         int numRivers = rivers.count { it.owner == p.id || it.option == p.id }
         p.score = computeScore(p.id)
-        println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
+        if (isVerbosity(Verbosity.GAME)) {
+            println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
                               p.id, p.score, p.moves, 1000 * p.setupTime,
                               1000 * p.moveTime / p.moves, 1000 * p.maxTime,
                               numRivers, p.name))
+        }
         totalTime += p.moveTime
     }
-    println(String.format("Total move time: %.3f seconds", totalTime))
+    if (isVerbosity(Verbosity.GAME)) {
+        println(String.format("Total move time: %.3f seconds", totalTime))
+    }
     if (ALL_PERMUTATIONS) {
         def log = new File("results.csv")
         punters.each { p ->
@@ -337,6 +364,7 @@ def runGame(punters, numGame) {
 }
 
 if (ALL_PERMUTATIONS) {
+    verbosity = Verbosity.GAMES
     int numGame = 1
     punters.eachPermutation { ps ->
         runGame(ps, numGame)
