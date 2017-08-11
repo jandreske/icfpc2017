@@ -11,10 +11,10 @@ import java.util.concurrent.TimeUnit
 
 
 // config section
-final SETUP_TIMEOUT = 10
-final MOVE_TIMEOUT = 1
-final SETTINGS = [futures: false, splurges: false, options: false]
-final ALL_PERMUTATIONS = false
+@Field final SETUP_TIMEOUT = 10
+@Field final MOVE_TIMEOUT = 1
+@Field final SETTINGS = [futures: false, splurges: false, options: false]
+@Field final ALL_PERMUTATIONS = true
 
 enum Verbosity {
     SILENT, GAMES, MOVES, MOVE_DETAIL, MESSAGES, FULL
@@ -25,7 +25,16 @@ boolean isVerbosity(Verbosity v) {
     return verbosity.compareTo(v) >= 0
 }
 
-final jsonSlurper = new JsonSlurper()
+@Field final JsonSlurper jsonSlurper = new JsonSlurper()
+
+long fak(int n) {
+    long r = 1
+    for (int i = 2; i <= n; i++) {
+        r *= i
+    }
+    r
+}
+
 
 def claimRiver(claim) {
     rivers.each { r ->
@@ -109,9 +118,9 @@ def writeJson(PrintStream out, obj) {
     }
 }
 
-final executor = Executors.newFixedThreadPool(1)
+@Field final executor = Executors.newFixedThreadPool(1)
 
-final PIPE_SIZE = 16384
+@Field final int PIPE_SIZE = 16384
 
 def startPunter(punter) {
     if (punter.external) {
@@ -344,7 +353,7 @@ def runGame(punters, numGame) {
     punters.each { p ->
         int numRivers = rivers.count { it.owner == p.id || it.option == p.id }
         p.score = computeScore(p.id)
-        if (isVerbosity(Verbosity.GAME)) {
+        if (isVerbosity(Verbosity.GAMES)) {
             println(String.format("SCORE %2d: %7d (moves: %4d, setup: %4.0fms, move: %3.0fms avg, %3.0fms max, claimed: %4d)  %s",
                               p.id, p.score, p.moves, 1000 * p.setupTime,
                               1000 * p.moveTime / p.moves, 1000 * p.maxTime,
@@ -352,7 +361,7 @@ def runGame(punters, numGame) {
         }
         totalTime += p.moveTime
     }
-    if (isVerbosity(Verbosity.GAME)) {
+    if (isVerbosity(Verbosity.GAMES)) {
         println(String.format("Total move time: %.3f seconds", totalTime))
     }
     if (ALL_PERMUTATIONS) {
@@ -366,7 +375,9 @@ def runGame(punters, numGame) {
 if (ALL_PERMUTATIONS) {
     verbosity = Verbosity.GAMES
     int numGame = 1
+    def numGames = fak(punters.size())
     punters.eachPermutation { ps ->
+        println "Game ${numGame}/${numGames} ..."
         runGame(ps, numGame)
         numGame++
     }
