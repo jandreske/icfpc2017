@@ -229,6 +229,9 @@ class MapBasedGameState implements GameState {
         }
         Move.SplurgeData splurge = move.getSplurge();
         if (splurge != null) {
+            if (!getSettings().isSplurges()) {
+                throw new LogicException("splurges not enabled: " + splurge);
+            }
             int punter = splurge.punter;
             int cred = credits.getOrDefault(punter, 0) + 1;
             int n = splurge.route.size();
@@ -247,6 +250,9 @@ class MapBasedGameState implements GameState {
         }
         Move.ClaimData option = move.getOption();
         if (option != null) {
+            if (!getSettings().isOptions()) {
+                throw new LogicException("options not enabled: " + option);
+            }
             River river = getRiver(option.source, option.target).get();
             if (!takeOption(river, option.punter)) {
                 throw new LogicException("river " + river + " not eligible for option");
