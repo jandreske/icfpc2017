@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import solvers.*;
 import solvers.chris.HeuristicSolver;
+import solvers.chris.MonteCarloSolver;
 import state.GameState;
 import state.GameStateFactory;
 
@@ -33,6 +34,7 @@ public class Punter {
 
     private static Solver getSolver(String arg) {
         switch (arg) {
+            case "montecarlo":      return new MonteCarloSolver((TIME_OUT_MS - 60) * 1000000L);
             case "random":          return new RandomClaimer();
             case "simple":          return new SimpleMineClaimer();
             case "maxpoint":        return new MaxPointClaimer();
