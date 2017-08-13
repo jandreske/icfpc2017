@@ -5,6 +5,7 @@
 /dist/icfpc2017.jar
 /dist/README
 /dist/src/
+server.log
 
 build/
 .gradle/
